@@ -1,0 +1,15 @@
+.vscode/
+_ide/
+bsp_include/
+build/
+Libs/
+src/
+*.bin
+*.elf
+*.bookmarks
+*.debug
+*.layout
+*.prj
+*.ld
+*.spec
+Makefile
