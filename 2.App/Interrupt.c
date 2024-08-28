@@ -26,16 +26,49 @@ void PL_IntrHandler(void)
 /****************************VSC1 Calc Start****************************/
 //模拟信号输入计算
 	VSCAnalogNormaliz(&Ctl_VSC1);
-//检测电压电流坐标变换及PLL
-	clarke(&Ctl_VSC1.UGrid.P3S,&Ctl_VSC1.UGrid.P2S);									//3S-2S
-	GetOmegaTheta(&Ctl_VSC1);															//PLL
-	park(&Ctl_VSC1.UGrid.P2S,&Ctl_VSC1.UGrid.P2R,&Ctl_VSC1.Theta_GridSincos);			//2S-2R
-//电流坐标变换
-	Ctl_VSC1.ThetaPhase = Ctl_VSC1.Theta-THETA30DEG;
-	clarke(&Ctl_VSC1.IGrid.P3S,&Ctl_VSC1.IGrid.P2S);									//3S-2S
-	arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
-	park(&Ctl_VSC1.IGrid.P2S,&Ctl_VSC1.IGrid.P2R,&Ctl_VSC1.ThetaPhase_GridSincos);		//2S-2R
-//控制环路计算
+// 电压电流有效值计算与滤波，功率计算与滤波
+	VSCRMS_PQCalc(&Ctl_VSC1);
+
+	if(Ctl_VSC1.CtlMode != VACCTL){
+		//检测电压电流坐标变换及PLL
+		clarke(&Ctl_VSC1.UGrid.P3S,&Ctl_VSC1.UGrid.P2S);									//3S-2S
+		GetOmegaTheta(&Ctl_VSC1);															//PLL
+		park(&Ctl_VSC1.UGrid.P2S,&Ctl_VSC1.UGrid.P2R,&Ctl_VSC1.Theta_GridSincos);			//2S-2R
+		//电流坐标变换
+		Ctl_VSC1.ThetaPhase = Ctl_VSC1.Theta-THETA30DEG;
+		clarke(&Ctl_VSC1.IGrid.P3S,&Ctl_VSC1.IGrid.P2S);									//3S-2S
+		arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
+		park(&Ctl_VSC1.IGrid.P2S,&Ctl_VSC1.IGrid.P2R,&Ctl_VSC1.ThetaPhase_GridSincos);		//2S-2R
+	}else{
+		// 构网控制功率外环
+		// VF控制
+		if(Ctl_VSC1.GFMCtlMode == VFCTL){
+			if(Ctl_VSC1.GFMCtlMode != Ctl_VSC1.GFMCtlMode_Pre){
+				// 切换构网控制模式后初次进入，清零Theta值
+				Ctl_VSC1.Theta = 0;
+				Ctl_VSC1.GFMCtlMode_Pre = Ctl_VSC1.GFMCtlMode;
+			}
+			Ctl_VSC1.Theta += 50*2*PI/INTFRE; // VCO
+			if(Ctl_VSC1.Theta > THETAMAX)
+			{
+				Ctl_VSC1.Theta -= THETAMAX;
+			}
+			else if(Ctl_VSC1.Theta < THETAMIN)
+				Ctl_VSC1.Theta += THETAMAX;
+			arm_sin_cos_f32_1(Ctl_VSC1.Theta, &Ctl_VSC1.Theta_GridSincos);
+			//电压坐标变换
+			clarke(&Ctl_VSC1.UGrid.P3S,&Ctl_VSC1.UGrid.P2S);
+			park(&Ctl_VSC1.UGrid.P2S,&Ctl_VSC1.UGrid.P2R,&Ctl_VSC1.Theta_GridSincos);
+			//电流坐标变换
+			Ctl_VSC1.ThetaPhase = Ctl_VSC1.Theta-THETA30DEG;
+			clarke(&Ctl_VSC1.IGrid.P3S,&Ctl_VSC1.IGrid.P2S);
+			arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
+			park(&Ctl_VSC1.IGrid.P2S,&Ctl_VSC1.IGrid.P2R,&Ctl_VSC1.ThetaPhase_GridSincos);
+		}else{
+			// TODO
+		}
+	}
+	//控制环路计算
 	VSCControlLoop(&Ctl_VSC1);
 /****************************VSC1 Calc End ****************************/
 
@@ -46,8 +79,6 @@ void PL_IntrHandler(void)
 //故障处理及指令下发
 	FaultProc();
 	CmdDown();
-
-	VSCRMS_PQCalc(&Ctl_VSC1);
 
 //软定时器控制
 	TimerProc(&MainTimer1);

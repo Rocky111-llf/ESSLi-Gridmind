@@ -362,19 +362,29 @@ void LIRunProc(tLI_CTL* tLIHandler)//选择控制模式
 		break;
 	case PQ_LI:
 		if(CtlModeChanged)
-		{//初次进入
+		{//初次进入，默认VSC运行在IDQ控制模式
 			tLIHandler->VLimH_PID.I = 0;
 			tLIHandler->VLimL_PID.I = 0;
 			tLIHandler->pVSC->Id_Cmd = 0.0f;
 			tLIHandler->pVSC->Iq_Cmd = 0.0f;
 			tLIHandler->pVSC->CtlMode = IDQCTL;
 			tLIHandler->ChgSts = CHG_PQ_LI;
+			// 构网控制模式初始化，默认工作在VF控制
+			tLIHandler->pVSC->GFMCtlMode = VFCTL;
+			tLIHandler->pVSC->GFMCtlMode_Pre = 0XFF-1;
 		}
+		// 此处通过两个PID限制Idref间接限制锂电池的输出电压值，考虑通过一个判断使VSC的其他运行模式也有此限制，其他运行模式下不应该在此赋Idref和Iqref值
 		tLIHandler->VLimH_PID.FeedBack = tLIHandler->Vopu;
 		tLIHandler->VLimL_PID.FeedBack = tLIHandler->Vopu;
 		PIDProc(&tLIHandler->VLimH_PID);
 		PIDProc(&tLIHandler->VLimL_PID);
-		float IdCmdTemp = tLIHandler->P_Ref/tLIHandler->pVSC->UGrid.P2R.d;
+		float IdCmdTemp = 0;
+		// 其他运行模式，直接读取Idref值
+		if(tLIHandler->pVSC->CtlMode == IDQCTL){
+			IdCmdTemp = tLIHandler->P_Ref/tLIHandler->pVSC->UGrid.P2R.d;
+		}else{
+			IdCmdTemp = tLIHandler->pVSC->Id_Cmd;
+		}
 		HardLimit(IdCmdTemp,tLIHandler->VLimL_PID.Out,tLIHandler->VLimH_PID.Out);
 		if(tLIHandler->ChgNotAllowedFlag)			//禁充触发
 			tLIHandler->ChDischAllowedSts |= 0x1;	//禁充标识
@@ -395,7 +405,12 @@ void LIRunProc(tLI_CTL* tLIHandler)//选择控制模式
 				tLIHandler->ChDischAllowedSts = tLIHandler->ChDischAllowedSts & 0xFFFD;		//清除禁放状态
 		}
 		tLIHandler->pVSC->Id_Cmd = IdCmdTemp;
-		tLIHandler->pVSC->Iq_Cmd = -tLIHandler->Q_Ref/tLIHandler->pVSC->UGrid.P2R.d;
+		// Iqref同样执行不同运行模式的判断
+		if(tLIHandler->pVSC->CtlMode == IDQCTL){
+			tLIHandler->pVSC->Iq_Cmd = -tLIHandler->Q_Ref/tLIHandler->pVSC->UGrid.P2R.d;
+		}else{
+			tLIHandler->pVSC->Iq_Cmd = tLIHandler->pVSC->Iq_Cmd; // 不变
+		}
 		break;
 	default:
 		tLIHandler->CtlMode = IDLE_LI;

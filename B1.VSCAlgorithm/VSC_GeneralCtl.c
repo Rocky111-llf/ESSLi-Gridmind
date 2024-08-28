@@ -39,6 +39,8 @@ void VSCParasInit(tVSC_CTL* tVSCHandler)
 	tVSCHandler->Iq_Cmd = 0.0f;
 	tVSCHandler->Vac_Cmd = 0.0f;
 	tVSCHandler->Fre_Cmd = 0.0f;
+	//增加Vac_Ref初始化
+	tVSCHandler->Vac_Ref = 0.0f;
 //PID Init
 	tVSCHandler->ThetaPID = tVSCHandler->THETA_PID_INIT;
 	tVSCHandler->IdPID = tVSCHandler->IDQ_PID_INIT;
@@ -47,6 +49,9 @@ void VSCParasInit(tVSC_CTL* tVSCHandler)
 	tVSCHandler->Q_PID = tVSCHandler->PQ_PID_INIT;
 	tVSCHandler->P_PID = tVSCHandler->PQ_PID_INIT;
 	tVSCHandler->Vc_PID = tVSCHandler->VC_PID_INIT;
+	// 增加交流电压DQ轴PID
+	tVSCHandler->Vd_PID = tVSCHandler->VC_PID_INIT;
+	tVSCHandler->Vq_PID = tVSCHandler->VC_PID_INIT;
 	tVSCHandler->IBusPID = tVSCHandler->IBUS_PID_INIT;
 	tVSCHandler->Id2PID = tVSCHandler->IDQ2_PID_INIT;
 	tVSCHandler->Iq2PID = tVSCHandler->IDQ2_PID_INIT;
@@ -148,6 +153,7 @@ void VSCSysCtl(tVSC_CTL* tVSCHandler)
 {
 	if(tVSCHandler->CtlMode == PQCTL)
 	{
+		// 外环无PI的跟网定功率控制
 		//有功分量
 		tVSCHandler->Id_Ref = tVSCHandler->P_Ref/tVSCHandler->UGrid.P2R.d;
 		if(tVSCHandler->Id_Ref>1.1f)
@@ -177,7 +183,7 @@ void VSCSysCtl(tVSC_CTL* tVSCHandler)
 		else if(tVSCHandler->Iq_Ref<-1.1f)
 			tVSCHandler->Iq_Ref = -1.1f;
 	}
-	else //if(LocalParas.CtlMode == IDQCTL)
+	else if(tVSCHandler->CtlMode == IDQCTL)
 	{
 		tVSCHandler->Idc_Ref = I_DC_LIM;													//直流限流值
 
@@ -208,6 +214,28 @@ void VSCSysCtl(tVSC_CTL* tVSCHandler)
 			tVSCHandler->Iq_Ref = 1.1f;
 		else if(tVSCHandler->Iq_Ref<-1.1f)
 			tVSCHandler->Iq_Ref = -1.1f;
+	}
+	else if(tVSCHandler->CtlMode == VACCTL)
+	{
+		//构网控制电压外环
+		if(tVSCHandler->GFMCtlMode == VFCTL){
+			// d轴电压跟踪参考值
+			tVSCHandler->Vd_PID.Ref = tVSCHandler->Vac_Ref;
+			tVSCHandler->Vd_PID.FeedBack = tVSCHandler->UGrid.P2R.d;
+			PIDProc(&tVSCHandler->Vd_PID);
+			tVSCHandler->Id_Ref = tVSCHandler->Vd_PID.Out;
+
+			// q轴电压跟踪0
+			tVSCHandler->Vq_PID.Ref = 0;
+			tVSCHandler->Vq_PID.FeedBack = tVSCHandler->UGrid.P2R.q;
+			PIDProc(&tVSCHandler->Vq_PID);
+			tVSCHandler->Iq_Ref = tVSCHandler->Vq_PID.Out;
+
+			HardLimit(tVSCHandler->Id_Ref, -1.1f, 1.1f);
+			HardLimit(tVSCHandler->Iq_Ref, -1.1f, 1.1f);
+		}else{
+			// TODO
+		}
 	}
 }
 
@@ -261,7 +289,27 @@ void VSCControlLoop(tVSC_CTL* tVSCHandler)
 		}
 		else
 		{//==VACCTL
+			// 采用双环控制的构网电流内环，与跟网一样，如果是采用单环的构网控制则需要更改
+			tVSCHandler->IdPID.Ref = tVSCHandler->Id_Ref;
+			tVSCHandler->IdPID.FeedBack = tVSCHandler->IGrid.P2R.d;
+			PIDProc(&tVSCHandler->IdPID);
+			//Iq
+			tVSCHandler->IqPID.Ref = tVSCHandler->Iq_Ref;
+			tVSCHandler->IqPID.FeedBack = tVSCHandler->IGrid.P2R.q;
+			PIDProc(&tVSCHandler->IqPID);
+			//OutV Calc
+			float VRatio = (NORM_V/(tVSCHandler->DCV_Bus*(RATED_DCV*0.5f*1.154f)));
+			tVSCHandler->UConv.P2R.d = (tVSCHandler->UGrid.P2R.d - tVSCHandler->IdPID.Out + (tVSCHandler->IGrid.P2R.q*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
+			tVSCHandler->UConv.P2R.q = (tVSCHandler->UGrid.P2R.q - tVSCHandler->IqPID.Out - (tVSCHandler->IGrid.P2R.d*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
 
+			//单位圆限幅
+			MagP2R = FastSqrt2((tVSCHandler->UConv.P2R.d*tVSCHandler->UConv.P2R.d)+(tVSCHandler->UConv.P2R.q*tVSCHandler->UConv.P2R.q),&MagP2R_Reci);
+			if(MagP2R>0.9999999f)
+			{
+				tVSCHandler->UConv.P2R.d = tVSCHandler->UConv.P2R.d*MagP2R_Reci;
+				tVSCHandler->UConv.P2R.q = tVSCHandler->UConv.P2R.q*MagP2R_Reci;
+			}
+			ipark(&tVSCHandler->UConv.P2R,&tVSCHandler->UConv.P2S,&tVSCHandler->ThetaPhase_GridSincos);
 		}
 		//调制波设置
 		svgen(tVSCHandler);
@@ -410,9 +458,10 @@ void VSCFaultDet(tVSC_CTL* tVSCHandler)
 ****************************************************************************/
 void VSCCmd_Slope(tVSC_CTL* tVSCHandler)
 {
-	float PQStep,VdcStep;
+	float PQStep,VdcStep,VacStep;
 	PQStep = tVSCHandler->PQSlopStep;
 	VdcStep = tVSCHandler->VdcSlopStep;
+	VacStep = tVSCHandler->VacSlopStep;
 	if(tVSCHandler->CtlMode == PQCTL)
 	{
 //有功功率爬坡
@@ -451,6 +500,30 @@ void VSCCmd_Slope(tVSC_CTL* tVSCHandler)
 	{
 		tVSCHandler->Id_Ref = tVSCHandler->Id_Cmd;
 		tVSCHandler->Iq_Ref = tVSCHandler->Iq_Cmd;
+	}
+	else if(tVSCHandler->CtlMode == VACCTL)
+	{
+//有功功率爬坡
+		if((tVSCHandler->P_Ref+PQStep) < tVSCHandler->P_Cmd)
+			tVSCHandler->P_Ref += PQStep;
+		else if((tVSCHandler->P_Ref-PQStep) > tVSCHandler->P_Cmd)
+			tVSCHandler->P_Ref -= PQStep;
+		else
+			tVSCHandler->P_Ref = tVSCHandler->P_Cmd;
+//无功功率爬坡
+		if((tVSCHandler->Q_Ref+PQStep) < tVSCHandler->Q_Cmd)
+			tVSCHandler->Q_Ref += PQStep;
+		else if((tVSCHandler->Q_Ref-PQStep) > tVSCHandler->Q_Cmd)
+			tVSCHandler->Q_Ref -= PQStep;
+		else
+			tVSCHandler->Q_Ref = tVSCHandler->Q_Cmd;
+//交流电压爬坡
+		if((tVSCHandler->Vac_Ref+VacStep) < tVSCHandler->Vac_Cmd)
+			tVSCHandler->Vac_Ref += VacStep;
+		else if((tVSCHandler->Vac_Ref-VacStep) > tVSCHandler->Vac_Cmd)
+			tVSCHandler->Vac_Ref -= VacStep;
+		else
+			tVSCHandler->Vac_Ref = tVSCHandler->Vac_Cmd;
 	}
 }
 

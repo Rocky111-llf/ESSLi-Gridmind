@@ -552,6 +552,7 @@ void DataProc_UART1(void)
 						Ctl_LI1.SOC_Ref = f32Temp;
 						break;
 					case PQ_LI:
+					// 运行时需要切换跟构网模式时应先将锂电设置为PQ工作模式，PQ设置相应的值，然后再通过辅助下发选择VSC运行模式和参数值
 						SetWordB0(f32Temp,CmdDatBuf_UART1[4]);
 						SetWordB1(f32Temp,CmdDatBuf_UART1[5]);
 						SetWordB2(f32Temp,CmdDatBuf_UART1[6]);
@@ -573,6 +574,29 @@ void DataProc_UART1(void)
 			if((CmdDatBuf_UART1[1] == 0x1))
 			{//控制模式设置
 				AuxCom(CmdDatBuf_UART1[3], (float*)(&CmdDatBuf_UART1[4]));
+				// VSC控制模式更改与参数下发
+				Ctl_VSC1.CtlMode_Ref = VSC_CTLMODE;
+				Ctl_VSC1.CtlMode = VSC_CTLMODE;
+				switch(Ctl_VSC1.CtlMode){
+					case PQCTL: // = 0
+						// 跟网定功率控制
+						Ctl_VSC1.P_Cmd = VSC_PREF;
+						Ctl_VSC1.Q_Cmd = VSC_QREF;
+						break;
+					case VQCTL: // = 1
+						Ctl_VSC1.Vdc_Cmd = VSC_UDCREF;
+						Ctl_VSC1.Q_Cmd = VSC_QREF;
+						break;
+					case IDQCTL: // = 2
+						// 暂时未定义，不用设置这个模式
+						break;
+					case VACCTL: // = 3
+						Ctl_VSC1.P_Cmd = VSC_PREF;
+						Ctl_VSC1.Q_Cmd = VSC_QREF;
+#ifdef QVLOOP
+						Ctl_VSC1.Vac_Cmd = VSC_UACREF;
+#endif
+				}
 			}
 			DataTrans_UART1(CMD_DATSET_R,0x1,0x0);
 		}

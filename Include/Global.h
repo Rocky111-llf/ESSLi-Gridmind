@@ -164,6 +164,17 @@ static INLINE void f32Lim(float * x, float min, float max)
 #define HardLimit(A,min,max)	(((A)>(max))?((A)=(max)):(((A)<(min))?((A)=(min)):((A)=(A))))			//为避免宏函数异常，A/min/max均为变量或常数
 #define SetDAC(Value,Max,Handle,Ch)	((Handle).Cmd->bit.AOdat[(Ch)] = (1.0f/(Max)*32768)*(Value))
 
+// 串口屏参数辅助下发定义
+extern float ComDatF[];
+#define VSC_CTLMODE ComDatF[0]
+#define VSC_PREF ComDatF[1]
+#define VSC_QREF ComDatF[2]
+#define VSC_UACREF ComDatF[3]
+#define VSC_UDCREF ComDatF[4]
+
+// 是否启用无功外环定义
+#define QVLOOP 
+
 #endif
 
 

@@ -32,6 +32,7 @@
 
 #define PQ_SLOP_STEP 		(0.0001f)	//功率爬坡
 #define VDC_SLOP_STEP		(0.001f)	//直流电压爬坡 pu/ms
+#define VAC_SLOP_STEP		(0.001f)	//交流电压爬坡 pu/ms
 
 /***********开入开出定义***********/
 //o交流断路器跳闸控制

@@ -29,6 +29,7 @@ typedef enum {
 //枚举定义
 typedef enum{PQCTL = 0,VQCTL = 1,IDQCTL = 2,VACCTL = 3} CTLMODE;
 typedef enum{DC_PRECHG = 0,AC_PRECHG = 1} STARTMODE;
+typedef enum{VFCTL = 0,PSCTL = 1,VSGCTL = 2} GFMMODE;
 
 //桥臂电流结构体定义
 typedef struct {
@@ -63,6 +64,9 @@ typedef struct
 	SYSSTATUS MainStatus;				//RUN IDLE ...etc
 	CTLMODE CtlMode_Ref;
 	CTLMODE CtlMode;					//PQ/VQ/Id&Iq Control Mode
+	// 添加构网控制模式
+	GFMMODE GFMCtlMode;
+	GFMMODE GFMCtlMode_Pre;
 	STARTMODE StartMode_Ref;
 	STARTMODE StartMode;
 	u16 StartUpStatus;
@@ -80,17 +84,19 @@ typedef struct
 	float ThetaPhase;
 	SINCOS_t ThetaPhase_GridSincos;
 	float DCV_Bus,DCI_Bus;							//直流测量值
-	float P_Ref,Q_Ref,Vdc_Ref;
+	float P_Ref,Q_Ref,Vdc_Ref,Vac_Ref;
 	float Id_Ref;									//实际使用的内部参考
 	float Iq_Ref;
 	float Idc_Ref;
 	PID ThetaPID,IdPID,IqPID,VBusPID,P_PID,Q_PID,Vc_PID,IBusPID,Id2PID,Iq2PID;
+	// 增加交流电压DQ轴PID
+	PID Vd_PID,Vq_PID;
 	float mdc_RefOutLoop;
 	float mdc;
 	s16 PWM_A,PWM_B,PWM_C;
 	u16 gErrMask,gSysErrReg,gSysErrFlag;
 	u16 gErrClr,gEnHBOut,gErrTriped;
-	float PQSlopStep,VdcSlopStep;
+	float PQSlopStep,VdcSlopStep,VacSlopStep;
 //运算中间变量
 	LPF AC_VARMS_G,AC_VBRMS_G,AC_VCRMS_G;           //电网电压有效值
 	LPF AC_IARMS_G,AC_IBRMS_G,AC_ICRMS_G;           //电网电流有效值
