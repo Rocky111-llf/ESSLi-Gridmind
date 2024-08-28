@@ -229,25 +229,29 @@ void DataTrans_UART1(CMD_TYPE Type,u8 Para1, u8 Para2)
 			CheckAddtoBuf_UART1(Para1);					//表示运行数据
 			CheckAddtoBuf_UART1(Para2);
 			//Ua
-			fTemp =  Ctl_LI1.pVSC->Va;
+			// fTemp =  Ctl_LI1.pVSC->Va;
+			fTemp = Ctl_LI1.pVSC->MainStatus;
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[3]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[2]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[1]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[0]);
 			//Ub
-			fTemp =  Ctl_LI1.pVSC->Vb;
+			// fTemp =  Ctl_LI1.pVSC->Vb;
+			fTemp = Ctl_VSC1.StartUpStatus;
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[3]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[2]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[1]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[0]);
 			//Uc
-			fTemp =  Ctl_LI1.pVSC->Vc;
+			// fTemp =  Ctl_LI1.pVSC->Vc;
+			fTemp = debug;
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[3]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[2]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[1]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[0]);
 			//Ia
-			fTemp =  Ctl_LI1.pVSC->Ia;
+			// fTemp =  Ctl_LI1.pVSC->Ia;
+			fTemp = Ctl_VSC1.gSysErrReg;
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[3]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[2]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[1]);
@@ -341,6 +345,7 @@ void DataTrans_UART1(CMD_TYPE Type,u8 Para1, u8 Para2)
 				u8Temp |= 0x1;
 			if(IsKM())
 				u8Temp |= 0x2;
+			// 这里为什么要注释 
 //			if(Ctl_LI1.pVSC->AcPreChSts())
 //				u8Temp |= 0x4;
 //			if(Ctl_LI1.pVSC->DcContSts())

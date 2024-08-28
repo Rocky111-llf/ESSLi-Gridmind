@@ -367,22 +367,22 @@ void VSCStartUp_DCPreChg(tVSC_CTL* tVSCHandler)
 			tVSCHandler->AcPreChCtl(0);
 			tVSCHandler->DcPreChCtl(0);
 		}
-		if(SSDelayOK())
+		if(SSDelayOK()) // 屏蔽交流断路器检测
 		{
-			if(!((tVSCHandler->AcContSts())||(tVSCHandler->DcContSts())||(tVSCHandler->AcPreChSts())||(tVSCHandler->DcPreChSts())))		//开关初始位置正常
-			{
-				if(tVSCHandler->CtlMode == VACCTL)
+			// if(!((tVSCHandler->AcContSts())||(tVSCHandler->DcContSts())||(tVSCHandler->AcPreChSts())||(tVSCHandler->DcPreChSts())))		//开关初始位置正常
+			// {
+			// 	if(tVSCHandler->CtlMode == VACCTL)
 					SetSS(SSDC_DcChk);
-				else
-					SetSS(SSDC_GridChk);
-			}
-			else
-			{
-				u16Temp = tVSCHandler->AcContSts() + (tVSCHandler->DcContSts()<<1) +(tVSCHandler->AcPreChSts()<<2) + (tVSCHandler->DcPreChSts()<<3);
-				SetMSW(tVSCHandler->StartFailReg,u16Temp);
-				SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
-				SetSS(SSDC_StartFail);
-			}
+			// 	else
+			// 		SetSS(SSDC_GridChk);
+			// }
+			// else
+			// {
+			// 	u16Temp = tVSCHandler->AcContSts() + (tVSCHandler->DcContSts()<<1) +(tVSCHandler->AcPreChSts()<<2) + (tVSCHandler->DcPreChSts()<<3);
+			// 	SetMSW(tVSCHandler->StartFailReg,u16Temp);
+			// 	SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
+			// 	SetSS(SSDC_StartFail);
+			// }
 		}
 		break;
 	case SSDC_GridChk:
@@ -408,18 +408,19 @@ void VSCStartUp_DCPreChg(tVSC_CTL* tVSCHandler)
 		if(StateChanged)
 		{//初次进入
 			SetSSDelay(500);				//设置检测时间
-			tVSCHandler->StartUpCheckEn |= (0x8);		//开启直流电压检测
+			// 屏蔽直流电压检测
+			// tVSCHandler->StartUpCheckEn |= (0x8);		//开启直流电压检测
 		}
 		if(SSDelayOK())
 		{
-			if(tVSCHandler->StartCheckFlag&(0x8))
-			{
-				u16Temp = 0;
-				SetMSW(tVSCHandler->StartFailReg,u16Temp);
-				SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
-				SetSS(SSDC_StartFail);
-			}
-			else
+			// if(tVSCHandler->StartCheckFlag&(0x8))
+			// {
+			// 	u16Temp = 0;
+			// 	SetMSW(tVSCHandler->StartFailReg,u16Temp);
+			// 	SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
+			// 	SetSS(SSDC_StartFail);
+			// }
+			// else
 				SetSS(SSDC_HBCfg);
 		}
 		break;
@@ -463,29 +464,29 @@ void VSCStartUp_DCPreChg(tVSC_CTL* tVSCHandler)
 		{
 			if(SSDelayOK())			//所有模块应该处于复位状态，且模块有效
 				SetSS(SSDC_PreChgDio);
-			else
-			{
-				if(tVSCHandler->HBOK())
-				{
-					u16Temp = (u16)(tVSCHandler->pHBDat_A->HBMode==HB_MODE_RST) + \
-							  (u16)(tVSCHandler->pHBDat_B->HBMode==HB_MODE_RST) + \
-							  (u16)(tVSCHandler->pHBDat_C->HBMode==HB_MODE_RST);
-							  //(u16)(tVSCHandler->pHBDat_N->HBMode==HB_MODE_RST);
+			// else
+			// {
+			// 	if(tVSCHandler->HBOK())
+			// 	{
+			// 		u16Temp = (u16)(tVSCHandler->pHBDat_A->HBMode==HB_MODE_RST) + \
+			// 				  (u16)(tVSCHandler->pHBDat_B->HBMode==HB_MODE_RST) + \
+			// 				  (u16)(tVSCHandler->pHBDat_C->HBMode==HB_MODE_RST);
+			// 				  //(u16)(tVSCHandler->pHBDat_N->HBMode==HB_MODE_RST);
 
-					if(u16Temp != 3)
-					{
-						SetMSW(tVSCHandler->StartFailReg,1);
-						SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
-						SetSS(SSAC_StartFail);
-					}
-				}
-				else
-				{
-					SetMSW(tVSCHandler->StartFailReg,0);
-					SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
-					SetSS(SSDC_StartFail);
-				}
-			}
+			// 		if(u16Temp != 3)
+			// 		{
+			// 			SetMSW(tVSCHandler->StartFailReg,1);
+			// 			SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
+			// 			SetSS(SSAC_StartFail);
+			// 		}
+			// 	}
+			// 	else
+			// 	{
+			// 		SetMSW(tVSCHandler->StartFailReg,0);
+			// 		SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
+			// 		SetSS(SSDC_StartFail);
+			// 	}
+			// }
 		}
 		break;
 	case SSDC_PreChgDio:									//预充开启前，需要开启所有保护
@@ -653,15 +654,17 @@ void VSCDcStartUpCheck(tVSC_CTL* tVSCHandler)
 ****************************************************************************/
 void VSCRunCheck(tVSC_CTL* tVSCHandler)
 {
+	// 软件过欠压检测，孤网运行时需要屏蔽
 	if((LimitProc(&tVSCHandler->ACVINA_Limit,tVSCHandler->RMSInfo.RMS_Va,RUN)+LimitProc(&tVSCHandler->ACVINB_Limit,tVSCHandler->RMSInfo.RMS_Vb,RUN)+LimitProc(&tVSCHandler->ACVINC_Limit,tVSCHandler->RMSInfo.RMS_Vc,RUN))!=LIMIT_OK)
 	{
-		if(tVSCHandler->CtlMode != VACCTL)
-			tVSCHandler->gSysErrReg |= ERR_AC_UVOV_SW;
+		// if(tVSCHandler->CtlMode != VACCTL){
+		// 	tVSCHandler->gSysErrReg |= ERR_AC_UVOV_SW;
+		// }
 	}
 	if(LimitProc(&tVSCHandler->FrePLL_Limit,tVSCHandler->PLLFre,RUN) != LIMIT_OK)
 	{
-		if(tVSCHandler->CtlMode != VACCTL)
-			tVSCHandler->gSysErrReg |= ERR_PLL_SW;
+		// if(tVSCHandler->CtlMode != VACCTL)
+		// 	tVSCHandler->gSysErrReg |= ERR_PLL_SW;
 	}
 }
 

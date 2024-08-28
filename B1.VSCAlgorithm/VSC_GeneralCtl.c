@@ -402,20 +402,25 @@ void VSCFaultDet(tVSC_CTL* tVSCHandler)
 
 	HardFaultReg = 0;//hSen0_Dat->bit.Fault;
 //硬件交流过压
-	if(HardFaultReg & (u32)0x7)
+	if(HardFaultReg & (u32)0x7){
 		tVSCHandler->gSysErrReg |= ERR_AC_OV_HW;
+	}
 //硬件交流过流
-	if(HardFaultReg & ((u32)0x7<<3))
+	if(HardFaultReg & ((u32)0x7<<3)){
 		tVSCHandler->gSysErrReg |= ERR_AC_OC_HW;
+	}
 //硬件直流过压
-	if(HardFaultReg & ((u32)0x1<<8))
+	if(HardFaultReg & ((u32)0x1<<8)){
 		tVSCHandler->gSysErrReg |= ERR_DC_OV_HW;
+	}
 //硬件直流过流
-	if(HardFaultReg & ((u32)0x1<<6))
+	if(HardFaultReg & ((u32)0x1<<6)){
 		tVSCHandler->gSysErrReg |= ERR_DC_OC_HW;
+	}
 //急停开关
-	if(tVSCHandler->EmSwSts())
+	if(tVSCHandler->EmSwSts()){
 		tVSCHandler->gSysErrReg |= ERR_EMER_HW;
+	}
 
 	if((tVSCHandler->gSysErrReg) & ((tVSCHandler->gErrMask)|ERR_EMER_HW|ERR_BOARDLINK_HW))		//故障信号在掩码范围内(急停、板连接总是有效)
 	{

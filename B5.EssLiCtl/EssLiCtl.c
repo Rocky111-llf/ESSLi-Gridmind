@@ -84,7 +84,7 @@ void LIInit(tLI_CTL* tLIHandler)
 	CANInit(&tLIHandler->tCANCtl);
 	tLIHandler->CANOTCnt = 500;
 	tLIHandler->BMS_ComOK = 1;
-	LIParasInit(tLIHandler);
+	LIParasInit(tLIHandler); // ³õÊ¼»¯ÁËÁ½´Î
 }
 /*************************************************
  Function: LIParasInit
@@ -185,18 +185,19 @@ void LIStartUp(tLI_CTL* tLIHandler)
 	case SSLI_SWCtl:
 		if(StateChanged)
 		{//³õ´Î½øÈë
-			SetSSDelay(2000);
-			if(IsCB())								//¼ì²é½Ó´¥Æ÷
-			{
+			SetSSDelay(2000); 
+			// ÆÁ±Î¶ÏÂ·Æ÷¼ì²â
+			// if(IsCB())								//¼ì²é¶ÏÂ·Æ÷
+			// {
 				KMCtl(1);							//ºÏ½Ó´¥Æ÷
-			}
-			else
-			{
-				u16Temp = 0x1;						//Ô¤³ä¿ª¹Ø±ÕºÏÊ§°Ü
-				SetMSW(tLIHandler->StartFailReg,u16Temp);
-				SetLSW(tLIHandler->StartFailReg,tLIHandler->StartUpStatus);
-				SetSS(SSLI_StartFail);
-			}
+			// }
+			// else
+			// {
+			// 	u16Temp = 0x1;						//Ô¤³ä¿ª¹Ø±ÕºÏÊ§°Ü
+			// 	SetMSW(tLIHandler->StartFailReg,u16Temp);
+			// 	SetLSW(tLIHandler->StartFailReg,tLIHandler->StartUpStatus);
+			// 	SetSS(SSLI_StartFail);
+			// }
 		}
 		if(SSDelayOK())
 		{
@@ -205,10 +206,11 @@ void LIStartUp(tLI_CTL* tLIHandler)
 			{
 				u16Temp |= 0x2;						//½Ó´¥Æ÷±ÕºÏÊ§°Ü
 			}
-			if(!IsCB())								//ÔÙ´Î¼ì²é¶ÏÂ·Æ÷£¬·ÀÖ¹Ó¿Á÷ÍË³ö
-			{
-				u16Temp |= 0x1;						//¶ÏÂ·Æ÷ÌøÕ¢
-			}
+			// ÆÁ±Î¶ÏÂ·Æ÷¼ì²â
+			// if(!IsCB())								//ÔÙ´Î¼ì²é¶ÏÂ·Æ÷£¬·ÀÖ¹Ó¿Á÷ÍË³ö
+			// {
+			// 	u16Temp |= 0x1;						//¶ÏÂ·Æ÷ÌøÕ¢
+			// }
 			if(u16Temp)
 			{
 				SetMSW(tLIHandler->StartFailReg,u16Temp);
@@ -234,7 +236,7 @@ void LIStartUp(tLI_CTL* tLIHandler)
 		{
 			if(tLIHandler->pVSC->MainStatus != RUN)
 			{
-				u16Temp = 0;												//VLIÆô¶¯Ê§°Ü
+				u16Temp = 0;												//VSCÆô¶¯Ê§°Ü
 				SetMSW(tLIHandler->StartFailReg,u16Temp);
 				SetLSW(tLIHandler->StartFailReg,tLIHandler->StartUpStatus);
 				SetSS(SSLI_StartFail);
