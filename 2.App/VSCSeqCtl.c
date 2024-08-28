@@ -367,22 +367,23 @@ void VSCStartUp_DCPreChg(tVSC_CTL* tVSCHandler)
 			tVSCHandler->AcPreChCtl(0);
 			tVSCHandler->DcPreChCtl(0);
 		}
-		if(SSDelayOK()) // 屏蔽交流断路器检测
+		if(SSDelayOK())
 		{
-			// if(!((tVSCHandler->AcContSts())||(tVSCHandler->DcContSts())||(tVSCHandler->AcPreChSts())||(tVSCHandler->DcPreChSts())))		//开关初始位置正常
-			// {
-			// 	if(tVSCHandler->CtlMode == VACCTL)
+			if(!((tVSCHandler->AcContSts())||(tVSCHandler->DcContSts())||(tVSCHandler->AcPreChSts())||(tVSCHandler->DcPreChSts())))		//开关初始位置正常
+			{
+				// 屏蔽模式检测区分
+				// if(tVSCHandler->CtlMode == VACCTL)
 					SetSS(SSDC_DcChk);
-			// 	else
-			// 		SetSS(SSDC_GridChk);
-			// }
-			// else
-			// {
-			// 	u16Temp = tVSCHandler->AcContSts() + (tVSCHandler->DcContSts()<<1) +(tVSCHandler->AcPreChSts()<<2) + (tVSCHandler->DcPreChSts()<<3);
-			// 	SetMSW(tVSCHandler->StartFailReg,u16Temp);
-			// 	SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
-			// 	SetSS(SSDC_StartFail);
-			// }
+				// else
+					// SetSS(SSDC_GridChk);
+			}
+			else
+			{
+				u16Temp = tVSCHandler->AcContSts() + (tVSCHandler->DcContSts()<<1) +(tVSCHandler->AcPreChSts()<<2) + (tVSCHandler->DcPreChSts()<<3);
+				SetMSW(tVSCHandler->StartFailReg,u16Temp);
+				SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
+				SetSS(SSDC_StartFail);
+			}
 		}
 		break;
 	case SSDC_GridChk:
@@ -464,29 +465,29 @@ void VSCStartUp_DCPreChg(tVSC_CTL* tVSCHandler)
 		{
 			if(SSDelayOK())			//所有模块应该处于复位状态，且模块有效
 				SetSS(SSDC_PreChgDio);
-			// else
-			// {
-			// 	if(tVSCHandler->HBOK())
-			// 	{
-			// 		u16Temp = (u16)(tVSCHandler->pHBDat_A->HBMode==HB_MODE_RST) + \
-			// 				  (u16)(tVSCHandler->pHBDat_B->HBMode==HB_MODE_RST) + \
-			// 				  (u16)(tVSCHandler->pHBDat_C->HBMode==HB_MODE_RST);
-			// 				  //(u16)(tVSCHandler->pHBDat_N->HBMode==HB_MODE_RST);
+			else
+			{
+				if(tVSCHandler->HBOK())
+				{
+					u16Temp = (u16)(tVSCHandler->pHBDat_A->HBMode==HB_MODE_RST) + \
+							  (u16)(tVSCHandler->pHBDat_B->HBMode==HB_MODE_RST) + \
+							  (u16)(tVSCHandler->pHBDat_C->HBMode==HB_MODE_RST);
+							  //(u16)(tVSCHandler->pHBDat_N->HBMode==HB_MODE_RST);
 
-			// 		if(u16Temp != 3)
-			// 		{
-			// 			SetMSW(tVSCHandler->StartFailReg,1);
-			// 			SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
-			// 			SetSS(SSAC_StartFail);
-			// 		}
-			// 	}
-			// 	else
-			// 	{
-			// 		SetMSW(tVSCHandler->StartFailReg,0);
-			// 		SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
-			// 		SetSS(SSDC_StartFail);
-			// 	}
-			// }
+					if(u16Temp != 3)
+					{
+						SetMSW(tVSCHandler->StartFailReg,1);
+						SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
+						SetSS(SSAC_StartFail);
+					}
+				}
+				else
+				{
+					SetMSW(tVSCHandler->StartFailReg,0);
+					SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
+					SetSS(SSDC_StartFail);
+				}
+			}
 		}
 		break;
 	case SSDC_PreChgDio:									//预充开启前，需要开启所有保护
@@ -511,13 +512,13 @@ void VSCStartUp_DCPreChg(tVSC_CTL* tVSCHandler)
 		}
 		else if(tVSCHandler->StartUpDelayCnt == 2000)		//检查开关
 		{
-//			if(!tVSCHandler->DcPreChSts())
-//			{
-//				u16Temp = 0x1000;				//预充开关闭合失败
-//				SetMSW(tVSCHandler->StartFailReg,u16Temp);
-//				SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
-//				SetSS(SSDC_StartFail);
-//			}
+			if(!tVSCHandler->DcPreChSts())
+			{
+				u16Temp = 0x1000;				//预充开关闭合失败
+				SetMSW(tVSCHandler->StartFailReg,u16Temp);
+				SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
+				SetSS(SSDC_StartFail);
+			}
 		}
 		break;
 	case SSDC_SWACDCOn:
@@ -530,14 +531,14 @@ void VSCStartUp_DCPreChg(tVSC_CTL* tVSCHandler)
 		}
 		if(SSDelayOK())
 		{
-//			if((tVSCHandler->AcContSts())&&(tVSCHandler->DcContSts())&&(!tVSCHandler->AcPreChSts())&&(!tVSCHandler->DcPreChSts()))
+			if((tVSCHandler->AcContSts())&&(tVSCHandler->DcContSts())&&(!tVSCHandler->AcPreChSts())&&(!tVSCHandler->DcPreChSts()))
 				SetSS(SSDC_FANChk);
-//			else
-//			{
-//				SetMSW(tVSCHandler->StartFailReg,0);
-//				SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
-//				SetSS(SSDC_StartFail);
-//			}
+			else
+			{
+				SetMSW(tVSCHandler->StartFailReg,0);
+				SetLSW(tVSCHandler->StartFailReg,tVSCHandler->StartUpStatus);
+				SetSS(SSDC_StartFail);
+			}
 		}
 		else if(tVSCHandler->StartUpDelayCnt == 500)
 		{
