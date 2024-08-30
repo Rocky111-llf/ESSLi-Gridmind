@@ -229,35 +229,33 @@ void DataTrans_UART1(CMD_TYPE Type,u8 Para1, u8 Para2)
 			CheckAddtoBuf_UART1(Para1);					//表示运行数据
 			CheckAddtoBuf_UART1(Para2);
 			//Ua
-			// fTemp =  Ctl_LI1.pVSC->Va;
-			fTemp = Ctl_LI1.pVSC->MainStatus;
+			fTemp =  Ctl_LI1.pVSC->Va;
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[3]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[2]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[1]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[0]);
 			//Ub
-			// fTemp =  Ctl_LI1.pVSC->Vb;
-			fTemp = Ctl_VSC1.StartUpStatus;
+			fTemp =  Ctl_LI1.pVSC->Vb;
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[3]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[2]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[1]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[0]);
 			//Uc
-			// fTemp =  Ctl_LI1.pVSC->Vc;
-			fTemp = debug;
+			fTemp =  Ctl_LI1.pVSC->Vc;
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[3]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[2]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[1]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[0]);
 			//Ia
 			// fTemp =  Ctl_LI1.pVSC->Ia;
-			fTemp = Ctl_VSC1.gSysErrReg;
+			fTemp = debug1;
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[3]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[2]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[1]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[0]);
 			//Ib
-			fTemp =  Ctl_LI1.pVSC->Ib;
+			// fTemp =  Ctl_LI1.pVSC->Ib;
+			fTemp = debug2;
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[3]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[2]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[1]);
@@ -580,8 +578,8 @@ void DataProc_UART1(void)
 			{//控制模式设置
 				AuxCom(CmdDatBuf_UART1[3], (float*)(&CmdDatBuf_UART1[4]));
 				// VSC控制模式更改与参数下发
-				Ctl_VSC1.CtlMode_Ref = VSC_CTLMODE;
-				Ctl_VSC1.CtlMode = VSC_CTLMODE;
+				Ctl_VSC1.CtlMode_Ref = (u16)VSC_CTLMODE;
+				Ctl_VSC1.CtlMode = (u16)VSC_CTLMODE;
 				switch(Ctl_VSC1.CtlMode){
 					case PQCTL: // = 0
 						// 跟网定功率控制

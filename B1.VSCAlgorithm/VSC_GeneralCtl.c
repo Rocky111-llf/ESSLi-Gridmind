@@ -262,45 +262,47 @@ void VSCControlLoop(tVSC_CTL* tVSCHandler)
 		//外环控制
 		if(tVSCHandler->OutLoopCnt == 0)
 			VSCSysCtl(tVSCHandler);
-		if (tVSCHandler->CtlMode != VACCTL)
-		{
-			//交流电流环
-			//Id
-			tVSCHandler->IdPID.Ref = tVSCHandler->Id_Ref;
-			tVSCHandler->IdPID.FeedBack = tVSCHandler->IGrid.P2R.d;
-			PIDProc(&tVSCHandler->IdPID);
-			//Iq
-			tVSCHandler->IqPID.Ref = tVSCHandler->Iq_Ref;
-			tVSCHandler->IqPID.FeedBack = tVSCHandler->IGrid.P2R.q;
-			PIDProc(&tVSCHandler->IqPID);
-			//OutV Calc
-			float VRatio = (NORM_V/(tVSCHandler->DCV_Bus*(RATED_DCV*0.5f*1.154f)));
-			tVSCHandler->UConv.P2R.d = (tVSCHandler->UGrid.P2R.d - tVSCHandler->IdPID.Out + (tVSCHandler->IGrid.P2R.q*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
-			tVSCHandler->UConv.P2R.q = (tVSCHandler->UGrid.P2R.q - tVSCHandler->IqPID.Out - (tVSCHandler->IGrid.P2R.d*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
-
-			//单位圆限幅
-			MagP2R = FastSqrt2((tVSCHandler->UConv.P2R.d*tVSCHandler->UConv.P2R.d)+(tVSCHandler->UConv.P2R.q*tVSCHandler->UConv.P2R.q),&MagP2R_Reci);
-			if(MagP2R>0.9999999f)
-			{
-				tVSCHandler->UConv.P2R.d = tVSCHandler->UConv.P2R.d*MagP2R_Reci;
-				tVSCHandler->UConv.P2R.q = tVSCHandler->UConv.P2R.q*MagP2R_Reci;
+		if(tVSCHandler->CtlMode == IDQCTL){
+			debug2+=1;
+			tVSCHandler->UConv.P2R.d = 0.5;
+			if(debug2>100000){
+				tVSCHandler->UConv.P2R.d = 0.7;
 			}
-			ipark(&tVSCHandler->UConv.P2R,&tVSCHandler->UConv.P2S,&tVSCHandler->ThetaPhase_GridSincos);				//2r to 2s
+			tVSCHandler->UConv.P2R.q = 0.0;
+			ipark(&tVSCHandler->UConv.P2R,&tVSCHandler->UConv.P2S,&tVSCHandler->ThetaPhase_GridSincos);
 		}
+		// if (tVSCHandler->CtlMode != VACCTL)
+		// {
+		// 	//交流电流环
+		// 	//Id
+		// 	tVSCHandler->IdPID.Ref = tVSCHandler->Id_Ref;
+		// 	tVSCHandler->IdPID.FeedBack = tVSCHandler->IGrid.P2R.d;
+		// 	PIDProc(&tVSCHandler->IdPID);
+		// 	//Iq
+		// 	tVSCHandler->IqPID.Ref = tVSCHandler->Iq_Ref;
+		// 	tVSCHandler->IqPID.FeedBack = tVSCHandler->IGrid.P2R.q;
+		// 	PIDProc(&tVSCHandler->IqPID);
+		// 	//OutV Calc
+		// 	float VRatio = (NORM_V/(tVSCHandler->DCV_Bus*(RATED_DCV*0.5f*1.154f)));
+		// 	tVSCHandler->UConv.P2R.d = (tVSCHandler->UGrid.P2R.d - tVSCHandler->IdPID.Out + (tVSCHandler->IGrid.P2R.q*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
+		// 	tVSCHandler->UConv.P2R.q = (tVSCHandler->UGrid.P2R.q - tVSCHandler->IqPID.Out - (tVSCHandler->IGrid.P2R.d*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
+
+		// 	//单位圆限幅
+		// 	MagP2R = FastSqrt2((tVSCHandler->UConv.P2R.d*tVSCHandler->UConv.P2R.d)+(tVSCHandler->UConv.P2R.q*tVSCHandler->UConv.P2R.q),&MagP2R_Reci);
+		// 	if(MagP2R>0.9999999f)
+		// 	{
+		// 		tVSCHandler->UConv.P2R.d = tVSCHandler->UConv.P2R.d*MagP2R_Reci;
+		// 		tVSCHandler->UConv.P2R.q = tVSCHandler->UConv.P2R.q*MagP2R_Reci;
+		// 	}
+		// 	ipark(&tVSCHandler->UConv.P2R,&tVSCHandler->UConv.P2S,&tVSCHandler->ThetaPhase_GridSincos);				//2r to 2s
+		// }
 		else
 		{//==VACCTL
-			// 采用双环控制的构网电流内环，与跟网一样，如果是采用单环的构网控制则需要更改
-			tVSCHandler->IdPID.Ref = tVSCHandler->Id_Ref;
-			tVSCHandler->IdPID.FeedBack = tVSCHandler->IGrid.P2R.d;
-			PIDProc(&tVSCHandler->IdPID);
-			//Iq
-			tVSCHandler->IqPID.Ref = tVSCHandler->Iq_Ref;
-			tVSCHandler->IqPID.FeedBack = tVSCHandler->IGrid.P2R.q;
-			PIDProc(&tVSCHandler->IqPID);
-			//OutV Calc
 			float VRatio = (NORM_V/(tVSCHandler->DCV_Bus*(RATED_DCV*0.5f*1.154f)));
-			tVSCHandler->UConv.P2R.d = (tVSCHandler->UGrid.P2R.d - tVSCHandler->IdPID.Out + (tVSCHandler->IGrid.P2R.q*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
-			tVSCHandler->UConv.P2R.q = (tVSCHandler->UGrid.P2R.q - tVSCHandler->IqPID.Out - (tVSCHandler->IGrid.P2R.d*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
+			// tVSCHandler->UConv.P2R.d = (tVSCHandler->Id_Ref);
+			// tVSCHandler->UConv.P2R.q = (tVSCHandler->Iq_Ref);
+			tVSCHandler->UConv.P2R.d = 0.2;
+			tVSCHandler->UConv.P2R.q = 0;
 
 			//单位圆限幅
 			MagP2R = FastSqrt2((tVSCHandler->UConv.P2R.d*tVSCHandler->UConv.P2R.d)+(tVSCHandler->UConv.P2R.q*tVSCHandler->UConv.P2R.q),&MagP2R_Reci);
@@ -396,8 +398,9 @@ void VSCFaultDet(tVSC_CTL* tVSCHandler)
 //功率模块状态判断
 	if(!(tVSCHandler->HBOK()))
 	{
-		if(tVSCHandler->gErrMask & ERR_PEM_SW)
+		if(tVSCHandler->gErrMask & ERR_PEM_SW){
 			tVSCHandler->gSysErrReg |= ERR_PEM_SW;
+		}
 	}
 
 	HardFaultReg = 0;//hSen0_Dat->bit.Fault;

@@ -175,7 +175,8 @@ extern float ComDatF[];
 // 是否启用无功外环定义
 #define QVLOOP 
 
-extern float debug;
+extern float debug1;
+extern float debug2;
 
 #endif
 

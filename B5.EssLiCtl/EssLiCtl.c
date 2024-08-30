@@ -281,10 +281,13 @@ void LIRunProc(tLI_CTL* tLIHandler)//选择控制模式
 		tLIHandler->Io_PID.Ref = 0.0f;				//工作于直流模式
 		tLIHandler->Io_PID.FeedBack = tLIHandler->Iopu;
 		PIDProc(&tLIHandler->Io_PID);
-		tLIHandler->pVSC->Id_Cmd = tLIHandler->Io_PID.Out;
-		tLIHandler->pVSC->Iq_Cmd = 0.0f;
+		// tLIHandler->pVSC->Id_Cmd = tLIHandler->Io_PID.Out;
+		// tLIHandler->pVSC->Iq_Cmd = 0.0f;
 		tLIHandler->ChgSts = CHG_IDLE_LI;
 		tLIHandler->pVSC->CtlMode = IDQCTL;
+		// tLIHandler->pVSC->GFMCtlMode = VFCTL;
+		// tLIHandler->pVSC->GFMCtlMode_Pre = 0XFF-1;
+		// tLIHandler->pVSC->Vac_Cmd = 1.0;
 		break;
 	case CH_DISCH_LI:								//充电模式
 		if(CtlModeChanged)
@@ -367,11 +370,12 @@ void LIRunProc(tLI_CTL* tLIHandler)//选择控制模式
 			tLIHandler->VLimL_PID.I = 0;
 			tLIHandler->pVSC->Id_Cmd = 0.0f;
 			tLIHandler->pVSC->Iq_Cmd = 0.0f;
-			tLIHandler->pVSC->CtlMode = IDQCTL;
+			tLIHandler->pVSC->CtlMode = VACCTL;
 			tLIHandler->ChgSts = CHG_PQ_LI;
 			// 构网控制模式初始化，默认工作在VF控制
 			tLIHandler->pVSC->GFMCtlMode = VFCTL;
 			tLIHandler->pVSC->GFMCtlMode_Pre = 0XFF-1;
+			tLIHandler->pVSC->Vac_Cmd = 1.0;
 		}
 		// 此处通过两个PID限制Idref间接限制锂电池的输出电压值，考虑通过一个判断使VSC的其他运行模式也有此限制，其他运行模式下不应该在此赋Idref和Iqref值
 		tLIHandler->VLimH_PID.FeedBack = tLIHandler->Vopu;
@@ -404,7 +408,8 @@ void LIRunProc(tLI_CTL* tLIHandler)//选择控制模式
 			else if(!(tLIHandler->DischNotAllowedFlag))
 				tLIHandler->ChDischAllowedSts = tLIHandler->ChDischAllowedSts & 0xFFFD;		//清除禁放状态
 		}
-		tLIHandler->pVSC->Id_Cmd = IdCmdTemp;
+		// tLIHandler->pVSC->Id_Cmd = IdCmdTemp;
+		tLIHandler->pVSC->Id_Cmd = tLIHandler->pVSC->Id_Cmd;
 		// Iqref同样执行不同运行模式的判断
 		if(tLIHandler->pVSC->CtlMode == IDQCTL){
 			tLIHandler->pVSC->Iq_Cmd = -tLIHandler->Q_Ref/tLIHandler->pVSC->UGrid.P2R.d;

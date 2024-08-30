@@ -29,16 +29,29 @@ void PL_IntrHandler(void)
 // 电压电流有效值计算与滤波，功率计算与滤波
 	VSCRMS_PQCalc(&Ctl_VSC1);
 
-	if(Ctl_VSC1.CtlMode != VACCTL){
-		//检测电压电流坐标变换及PLL
-		clarke(&Ctl_VSC1.UGrid.P3S,&Ctl_VSC1.UGrid.P2S);									//3S-2S
-		GetOmegaTheta(&Ctl_VSC1);															//PLL
-		park(&Ctl_VSC1.UGrid.P2S,&Ctl_VSC1.UGrid.P2R,&Ctl_VSC1.Theta_GridSincos);			//2S-2R
-		//电流坐标变换
+
+	if(Ctl_VSC1.CtlMode == IDQCTL){
+		// 先直接进入VF控制，暂时这里并不是IDQ控制
+		Ctl_VSC1.Theta += 50*2*PI/INTFRE;
+		if(Ctl_VSC1.Theta > THETAMAX){
+			Ctl_VSC1.Theta -= THETAMAX;
+		}
+		else if(Ctl_VSC1.Theta < THETAMIN){
+			Ctl_VSC1.Theta += THETAMAX;
+		}
 		Ctl_VSC1.ThetaPhase = Ctl_VSC1.Theta-THETA30DEG;
-		clarke(&Ctl_VSC1.IGrid.P3S,&Ctl_VSC1.IGrid.P2S);									//3S-2S
+		arm_sin_cos_f32_1(Ctl_VSC1.Theta, &Ctl_VSC1.Theta_GridSincos);
 		arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
-		park(&Ctl_VSC1.IGrid.P2S,&Ctl_VSC1.IGrid.P2R,&Ctl_VSC1.ThetaPhase_GridSincos);		//2S-2R
+	// if(Ctl_VSC1.CtlMode != VACCTL){
+	// 	//检测电压电流坐标变换及PLL
+	// 	clarke(&Ctl_VSC1.UGrid.P3S,&Ctl_VSC1.UGrid.P2S);									//3S-2S
+	// 	GetOmegaTheta(&Ctl_VSC1);															//PLL
+	// 	park(&Ctl_VSC1.UGrid.P2S,&Ctl_VSC1.UGrid.P2R,&Ctl_VSC1.Theta_GridSincos);			//2S-2R
+	// 	//电流坐标变换
+	// 	Ctl_VSC1.ThetaPhase = Ctl_VSC1.Theta-THETA30DEG;
+	// 	clarke(&Ctl_VSC1.IGrid.P3S,&Ctl_VSC1.IGrid.P2S);									//3S-2S
+	// 	arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
+	// 	park(&Ctl_VSC1.IGrid.P2S,&Ctl_VSC1.IGrid.P2R,&Ctl_VSC1.ThetaPhase_GridSincos);		//2S-2R
 	}else{
 		// 构网控制功率外环
 		// VF控制
@@ -61,9 +74,9 @@ void PL_IntrHandler(void)
 			park(&Ctl_VSC1.UGrid.P2S,&Ctl_VSC1.UGrid.P2R,&Ctl_VSC1.Theta_GridSincos);
 			//电流坐标变换
 			Ctl_VSC1.ThetaPhase = Ctl_VSC1.Theta-THETA30DEG;
-			clarke(&Ctl_VSC1.IGrid.P3S,&Ctl_VSC1.IGrid.P2S);
-			arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
-			park(&Ctl_VSC1.IGrid.P2S,&Ctl_VSC1.IGrid.P2R,&Ctl_VSC1.ThetaPhase_GridSincos);
+			// clarke(&Ctl_VSC1.IGrid.P3S,&Ctl_VSC1.IGrid.P2S);
+			// arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
+			// park(&Ctl_VSC1.IGrid.P2S,&Ctl_VSC1.IGrid.P2R,&Ctl_VSC1.ThetaPhase_GridSincos);
 		}else{
 			// TODO
 		}
@@ -85,15 +98,15 @@ void PL_IntrHandler(void)
 	TimerProc(&MainTimer2);
 	TimerProc(&MainTimer3);
 //DAC输出控制
-//	SetDAC((Ctl_VSC1.UGrid.P3S.a),1.2f,sAo0,0);
-//	SetDAC((Ctl_VSC1.UGrid.P3S.b),1.2f,sAo0,1);
-//	SetDAC((Ctl_VSC1.UGrid.P3S.c),1.2f,sAo0,2);
-//	SetDAC((Ctl_VSC1.Vdc),400,sAo0,3);
+	SetDAC((Ctl_VSC1.UGrid.P3S.a),1.2f,sAo0,0);
+	SetDAC((Ctl_VSC1.UGrid.P3S.b),1.2f,sAo0,1);
+	SetDAC((Ctl_VSC1.UGrid.P3S.c),1.2f,sAo0,2);
+	SetDAC((Ctl_VSC1.Theta),1.0,sAo0,3);
 //	SetDAC((Ctl_VSC1.IGrid.P3S.a),1.2f,sAo0,4);
 //	SetDAC((Ctl_VSC1.IGrid.P3S.b),1.2f,sAo0,5);
 //	SetDAC((Ctl_VSC1.IGrid.P3S.c),1.2f,sAo0,6);
-	SetDAC((Ctl_VSC1.IGrid.P3S.a),1.2f,sAo0,0);//并网电流
-	SetDAC((Ctl_VSC1.UGrid.P3S.a),1.2f,sAo0,1);//并网电压
+	// SetDAC((Ctl_VSC1.IGrid.P3S.a),1.2f,sAo0,0);//并网电流
+	// SetDAC((Ctl_VSC1.UGrid.P3S.a),1.2f,sAo0,1);//并网电压
 }
 
 

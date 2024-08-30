@@ -38,5 +38,6 @@ TIMER_SYS MainTimer3={105,MAIN_LOOP_TIMER3*INTFRE/1000-1,0};            //Լ500m
 
 BOOL_SYS FANCtl = BOOL_FALSE;
 
-float debug = 0;
+float debug1 = 0;
+float debug2 = 0;
 
