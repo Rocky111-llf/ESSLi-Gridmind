@@ -264,11 +264,28 @@ void VSCControlLoop(tVSC_CTL* tVSCHandler)
 			VSCSysCtl(tVSCHandler);
 		if(tVSCHandler->CtlMode == IDQCTL){
 			debug2+=1;
-			tVSCHandler->UConv.P2R.d = 0.5;
-			if(debug2>100000){
-				tVSCHandler->UConv.P2R.d = 0.7;
+			tVSCHandler->Vd_PID.Ref = 1.0;
+			tVSCHandler->Vd_PID.FeedBack = tVSCHandler->IGrid.P2R.d;
+			PIDProc(&tVSCHandler->Vd_PID);
+			tVSCHandler->Vq_PID.Ref = 0.0;
+			tVSCHandler->Vq_PID.FeedBack = tVSCHandler->IGrid.P2R.q;
+			PIDProc(&tVSCHandler->Vq_PID);
+			tVSCHandler->UConv.P2R.d = tVSCHandler->Vd_PID.Out;
+			tVSCHandler->UConv.P2R.q = tVSCHandler->Vq_PID.Out;\
+			MagP2R = FastSqrt2((tVSCHandler->UConv.P2R.d*tVSCHandler->UConv.P2R.d)+(tVSCHandler->UConv.P2R.q*tVSCHandler->UConv.P2R.q),&MagP2R_Reci);
+			if(MagP2R>0.9999999f)
+			{
+				tVSCHandler->UConv.P2R.d = tVSCHandler->UConv.P2R.d*MagP2R_Reci;
+				tVSCHandler->UConv.P2R.q = tVSCHandler->UConv.P2R.q*MagP2R_Reci;
 			}
-			tVSCHandler->UConv.P2R.q = 0.0;
+			
+			if(debug2 < 100000){
+				// 硬限制电压上升速率
+				if(tVSCHandler->UConv.P2R.d > 0.5)
+					tVSCHandler->UConv.P2R.d = 0.5;
+				if(tVSCHandler->UConv.P2R.q > 0.5)
+					tVSCHandler->UConv.P2R.q = 0.5;
+			}
 			ipark(&tVSCHandler->UConv.P2R,&tVSCHandler->UConv.P2S,&tVSCHandler->ThetaPhase_GridSincos);
 		}
 		// if (tVSCHandler->CtlMode != VACCTL)
