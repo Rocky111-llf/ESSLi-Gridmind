@@ -29,31 +29,20 @@ void PL_IntrHandler(void)
 // 电压电流有效值计算与滤波，功率计算与滤波
 	VSCRMS_PQCalc(&Ctl_VSC1);
 
-
-	if(Ctl_VSC1.CtlMode == IDQCTL){
-		// 先直接进入VF控制，暂时这里并不是IDQ控制
-		Ctl_VSC1.Theta += 50*2*PI/INTFRE;
-		if(Ctl_VSC1.Theta > THETAMAX){
-			Ctl_VSC1.Theta -= THETAMAX;
-		}
-		else if(Ctl_VSC1.Theta < THETAMIN){
-			Ctl_VSC1.Theta += THETAMAX;
-		}
+	if(Ctl_VSC1.CtlMode != VACCTL){
+		// 跟网控制
+		//检测电压电流坐标变换及PLL
+		clarke(&Ctl_VSC1.UGrid.P3S,&Ctl_VSC1.UGrid.P2S);									//3S-2S
+		GetOmegaTheta(&Ctl_VSC1);															//PLL
+		park(&Ctl_VSC1.UGrid.P2S,&Ctl_VSC1.UGrid.P2R,&Ctl_VSC1.Theta_GridSincos);			//2S-2R
+		//电流坐标变换
 		Ctl_VSC1.ThetaPhase = Ctl_VSC1.Theta-THETA30DEG;
-		arm_sin_cos_f32_1(Ctl_VSC1.Theta, &Ctl_VSC1.Theta_GridSincos);
+		clarke(&Ctl_VSC1.IGrid.P3S,&Ctl_VSC1.IGrid.P2S);									//3S-2S
 		arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
-	// if(Ctl_VSC1.CtlMode != VACCTL){
-	// 	//检测电压电流坐标变换及PLL
-	// 	clarke(&Ctl_VSC1.UGrid.P3S,&Ctl_VSC1.UGrid.P2S);									//3S-2S
-	// 	GetOmegaTheta(&Ctl_VSC1);															//PLL
-	// 	park(&Ctl_VSC1.UGrid.P2S,&Ctl_VSC1.UGrid.P2R,&Ctl_VSC1.Theta_GridSincos);			//2S-2R
-	// 	//电流坐标变换
-	// 	Ctl_VSC1.ThetaPhase = Ctl_VSC1.Theta-THETA30DEG;
-	// 	clarke(&Ctl_VSC1.IGrid.P3S,&Ctl_VSC1.IGrid.P2S);									//3S-2S
-	// 	arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
-	// 	park(&Ctl_VSC1.IGrid.P2S,&Ctl_VSC1.IGrid.P2R,&Ctl_VSC1.ThetaPhase_GridSincos);		//2S-2R
+		park(&Ctl_VSC1.IGrid.P2S,&Ctl_VSC1.IGrid.P2R,&Ctl_VSC1.ThetaPhase_GridSincos);		//2S-2R
 	}else{
-		// 构网控制功率外环
+		// 构网控制
+		// 功率外环
 		// VF控制
 		if(Ctl_VSC1.GFMCtlMode == VFCTL){
 			if(Ctl_VSC1.GFMCtlMode != Ctl_VSC1.GFMCtlMode_Pre){
@@ -74,11 +63,12 @@ void PL_IntrHandler(void)
 			park(&Ctl_VSC1.UGrid.P2S,&Ctl_VSC1.UGrid.P2R,&Ctl_VSC1.Theta_GridSincos);
 			//电流坐标变换
 			Ctl_VSC1.ThetaPhase = Ctl_VSC1.Theta-THETA30DEG;
+			// VF控制空载时不需要对电流进行坐标变换
 			// clarke(&Ctl_VSC1.IGrid.P3S,&Ctl_VSC1.IGrid.P2S);
-			// arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
+			arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
 			// park(&Ctl_VSC1.IGrid.P2S,&Ctl_VSC1.IGrid.P2R,&Ctl_VSC1.ThetaPhase_GridSincos);
 		}else{
-			// TODO
+			// TODO：其他构网控制
 		}
 	}
 	//控制环路计算

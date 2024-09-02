@@ -64,6 +64,8 @@ typedef struct
 	SYSSTATUS MainStatus;				//RUN IDLE ...etc
 	CTLMODE CtlMode_Ref;
 	CTLMODE CtlMode;					//PQ/VQ/Id&Iq Control Mode
+	// 添加孤网和并网状态标志位
+	u16 ISLANDED; // 标志位 1 -> 孤网 --- 0 -> 并网
 	// 添加构网控制模式
 	GFMMODE GFMCtlMode;
 	GFMMODE GFMCtlMode_Pre;

@@ -372,10 +372,10 @@ void VSCStartUp_DCPreChg(tVSC_CTL* tVSCHandler)
 			if(!((tVSCHandler->AcContSts())||(tVSCHandler->DcContSts())||(tVSCHandler->AcPreChSts())||(tVSCHandler->DcPreChSts())))		//开关初始位置正常
 			{
 				// 屏蔽模式检测区分
-				// if(tVSCHandler->CtlMode == VACCTL)
+				if(tVSCHandler->CtlMode == VACCTL)
 					SetSS(SSDC_DcChk);
-				// else
-					// SetSS(SSDC_GridChk);
+				else
+					SetSS(SSDC_GridChk);
 			}
 			else
 			{
@@ -410,6 +410,7 @@ void VSCStartUp_DCPreChg(tVSC_CTL* tVSCHandler)
 		{//初次进入
 			SetSSDelay(500);				//设置检测时间
 			// 屏蔽直流电压检测
+			// TODO: 理论上孤网启动也不需要屏蔽直流电压检测，这里的原因还有待探究
 			// tVSCHandler->StartUpCheckEn |= (0x8);		//开启直流电压检测
 		}
 		if(SSDelayOK())
@@ -655,18 +656,21 @@ void VSCDcStartUpCheck(tVSC_CTL* tVSCHandler)
 ****************************************************************************/
 void VSCRunCheck(tVSC_CTL* tVSCHandler)
 {
-	// 软件过欠压检测，孤网运行时需要屏蔽
+	// 软件过欠压和软件锁相环检测，孤网运行时不需要
+#ifdef ISLANDED_START
+#else
 	if((LimitProc(&tVSCHandler->ACVINA_Limit,tVSCHandler->RMSInfo.RMS_Va,RUN)+LimitProc(&tVSCHandler->ACVINB_Limit,tVSCHandler->RMSInfo.RMS_Vb,RUN)+LimitProc(&tVSCHandler->ACVINC_Limit,tVSCHandler->RMSInfo.RMS_Vc,RUN))!=LIMIT_OK)
 	{
-		// if(tVSCHandler->CtlMode != VACCTL){
-		// 	tVSCHandler->gSysErrReg |= ERR_AC_UVOV_SW;
-		// }
+		if(tVSCHandler->CtlMode != VACCTL){
+			tVSCHandler->gSysErrReg |= ERR_AC_UVOV_SW;
+		}
 	}
 	if(LimitProc(&tVSCHandler->FrePLL_Limit,tVSCHandler->PLLFre,RUN) != LIMIT_OK)
 	{
-		// if(tVSCHandler->CtlMode != VACCTL)
-		// 	tVSCHandler->gSysErrReg |= ERR_PLL_SW;
+		if(tVSCHandler->CtlMode != VACCTL)
+			tVSCHandler->gSysErrReg |= ERR_PLL_SW;
 	}
+#endif
 }
 
 /****************************************************************************

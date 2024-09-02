@@ -225,7 +225,14 @@ void LIStartUp(tLI_CTL* tLIHandler)
 			SetSSDelay(10000);
 			if(tLIHandler->pVSC != 0)										//指针非空
 			{
+#ifdef ISLANDED_START
+				tLIHandler->pVSC->CtlMode_Ref = VACCTL; // 孤网启动，默认采用交流电压控制中的VF控制
+				tLIHandler->pVSC->ISLANDED = 1; // 孤岛状态标志位置1
+#else
 				tLIHandler->pVSC->CtlMode_Ref = IDQCTL;						//电流控制
+				tLIHandler->pVSC->ISLANDED = 0; // 孤岛状态标志位置0
+#endif
+
 				tLIHandler->pVSC->StartMode_Ref = DC_PRECHG;				//直流预充
 				tLIHandler->pVSC->MainStatus_Ref = START;					//启动VSC
 			}
@@ -278,16 +285,23 @@ void LIRunProc(tLI_CTL* tLIHandler)//选择控制模式
 
 	switch(tLIHandler->CtlMode){
 	case IDLE_LI:
-		tLIHandler->Io_PID.Ref = 0.0f;				//工作于直流模式
-		tLIHandler->Io_PID.FeedBack = tLIHandler->Iopu;
-		PIDProc(&tLIHandler->Io_PID);
-		// tLIHandler->pVSC->Id_Cmd = tLIHandler->Io_PID.Out;
-		// tLIHandler->pVSC->Iq_Cmd = 0.0f;
-		tLIHandler->ChgSts = CHG_IDLE_LI;
-		tLIHandler->pVSC->CtlMode = IDQCTL;
-		// tLIHandler->pVSC->GFMCtlMode = VFCTL;
-		// tLIHandler->pVSC->GFMCtlMode_Pre = 0XFF-1;
-		// tLIHandler->pVSC->Vac_Cmd = 1.0;
+		if(tLIHandler->pVSC->ISLANDED){
+			// 孤岛状态，只能运行在VF控制状态下
+			tLIHandler->ChgSts = CHG_IDLE_LI;
+			tLIHandler->pVSC->CtlMode = VACCTL;
+			tLIHandler->pVSC->GFMCtlMode = VFCTL;
+			tLIHandler->pVSC->GFMCtlMode_Pre = 0XFF-1;
+			tLIHandler->pVSC->Vac_Cmd = 0.0; // 默认交流电压命令值为0
+		}else{
+			// 并网状态，默认工作在直流电流控制模式下
+			tLIHandler->Io_PID.Ref = 0.0f;
+			tLIHandler->Io_PID.FeedBack = tLIHandler->Iopu;
+			PIDProc(&tLIHandler->Io_PID);
+			tLIHandler->pVSC->Id_Cmd = tLIHandler->Io_PID.Out;
+			tLIHandler->pVSC->Iq_Cmd = 0.0f;
+			tLIHandler->ChgSts = CHG_IDLE_LI;
+			tLIHandler->pVSC->CtlMode = IDQCTL;
+		}
 		break;
 	case CH_DISCH_LI:								//充电模式
 		if(CtlModeChanged)
@@ -365,17 +379,22 @@ void LIRunProc(tLI_CTL* tLIHandler)//选择控制模式
 		break;
 	case PQ_LI:
 		if(CtlModeChanged)
-		{//初次进入，默认VSC运行在IDQ控制模式
-			tLIHandler->VLimH_PID.I = 0;
-			tLIHandler->VLimL_PID.I = 0;
-			tLIHandler->pVSC->Id_Cmd = 0.0f;
-			tLIHandler->pVSC->Iq_Cmd = 0.0f;
-			tLIHandler->pVSC->CtlMode = VACCTL;
+		{
+			tLIHandler->VLimH_PID.I = 0.0;
+			tLIHandler->VLimL_PID.I = 0.0;
+			tLIHandler->pVSC->Id_Cmd = 0.0;
+			tLIHandler->pVSC->Iq_Cmd = 0.0;
 			tLIHandler->ChgSts = CHG_PQ_LI;
-			// 构网控制模式初始化，默认工作在VF控制
-			tLIHandler->pVSC->GFMCtlMode = VFCTL;
-			tLIHandler->pVSC->GFMCtlMode_Pre = 0XFF-1;
-			tLIHandler->pVSC->Vac_Cmd = 1.0;
+			if(tLIHandler->pVSC->ISLANDED){
+				// 孤岛状态下,只能运行在VF控制
+				tLIHandler->pVSC->CtlMode = VACCTL;
+				tLIHandler->pVSC->GFMCtlMode = VFCTL;
+				tLIHandler->pVSC->GFMCtlMode_Pre = 0XFF-1; // 重置VF相位
+				tLIHandler->pVSC->Vac_Cmd = 0.0; // 默认交流电压命令值为0，必须得爬坡，调制波幅值改变快了子模块会报错
+			}else{
+				// 并网状态，默认运行在外环解算功率的IDQ控制模式
+				tLIHandler->pVSC->CtlMode = IDQCTL;
+			}
 		}
 		// 此处通过两个PID限制Idref间接限制锂电池的输出电压值，考虑通过一个判断使VSC的其他运行模式也有此限制，其他运行模式下不应该在此赋Idref和Iqref值
 		tLIHandler->VLimH_PID.FeedBack = tLIHandler->Vopu;
@@ -408,8 +427,7 @@ void LIRunProc(tLI_CTL* tLIHandler)//选择控制模式
 			else if(!(tLIHandler->DischNotAllowedFlag))
 				tLIHandler->ChDischAllowedSts = tLIHandler->ChDischAllowedSts & 0xFFFD;		//清除禁放状态
 		}
-		// tLIHandler->pVSC->Id_Cmd = IdCmdTemp;
-		tLIHandler->pVSC->Id_Cmd = tLIHandler->pVSC->Id_Cmd;
+		tLIHandler->pVSC->Id_Cmd = IdCmdTemp;
 		// Iqref同样执行不同运行模式的判断
 		if(tLIHandler->pVSC->CtlMode == IDQCTL){
 			tLIHandler->pVSC->Iq_Cmd = -tLIHandler->Q_Ref/tLIHandler->pVSC->UGrid.P2R.d;

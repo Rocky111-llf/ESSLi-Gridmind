@@ -175,6 +175,9 @@ extern float ComDatF[];
 // 是否启用无功外环定义
 #define QVLOOP 
 
+// 是否孤网启动
+#define ISLANDED_START
+
 extern float debug1;
 extern float debug2;
 
