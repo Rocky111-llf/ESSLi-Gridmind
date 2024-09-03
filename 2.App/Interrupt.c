@@ -95,6 +95,7 @@ void PL_IntrHandler(void)
 	SetDAC((Ctl_VSC1.Id_Ref),10.0f,sAo0,0);
 	SetDAC((Ctl_VSC1.Iq_Ref),10.0f,sAo0,1);
 	SetDAC((Ctl_VSC1.Vac_Ref),10.0f,sAo0,2);
+	SetDAC((Ctl_VSC1.UGrid.P2R.d),10.0f,sAo0,3);
 //	SetDAC((Ctl_VSC1.IGrid.P3S.a),1.2f,sAo0,4);
 //	SetDAC((Ctl_VSC1.IGrid.P3S.b),1.2f,sAo0,5);
 //	SetDAC((Ctl_VSC1.IGrid.P3S.c),1.2f,sAo0,6);
