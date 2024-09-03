@@ -248,6 +248,7 @@ void DataTrans_UART1(CMD_TYPE Type,u8 Para1, u8 Para2)
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[0]);
 			//Ia
 			// fTemp =  Ctl_LI1.pVSC->Ia;
+			debug1 = Ctl_VSC1.gSysErrReg;
 			fTemp = debug1;
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[3]);
 			CheckAddtoBuf_UART1(((u8*)(&fTemp))[2]);

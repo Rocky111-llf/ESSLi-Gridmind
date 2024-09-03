@@ -392,6 +392,7 @@ tVSC_CTL VarDef(Ctl,DevID) = {
 		.Flag3P4W = Is3P4W,
 		.PQSlopStep = PQ_SLOP_STEP,
 		.VdcSlopStep = VDC_SLOP_STEP,
+		.VacSlopStep = VAC_SLOP_STEP,
 		.Init = VarDef(Init,DevID),
 		.ClrErr = VarDef(ClrErr__,DevID),
 };

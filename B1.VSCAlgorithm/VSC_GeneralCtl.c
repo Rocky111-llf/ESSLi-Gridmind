@@ -288,6 +288,7 @@ void VSCControlLoop(tVSC_CTL* tVSCHandler)
 			if(tVSCHandler->GFMCtlMode == VFCTL){
 				// 空载时不含电流内环，直接用Id_ref和Iq_ref的参考值等效调制比信号
 				float VRatio = (NORM_V/(tVSCHandler->DCV_Bus*(RATED_DCV*0.5f*1.154f)));
+				debug2 = VRatio;
 				tVSCHandler->UConv.P2R.d = (tVSCHandler->Id_Ref)*VRatio;
 				tVSCHandler->UConv.P2R.q = (tVSCHandler->Iq_Ref)*VRatio;
 			}
