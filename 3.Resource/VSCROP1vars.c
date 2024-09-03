@@ -152,8 +152,8 @@ const PID VarDef(VBUS_PID_INIT,DevID) = {0,0,0,0, //Ref,Feedback,Err,ErrPre
 		0};//UF;
 
 const PID VarDef(VC_PID_INIT,DevID) = {0,0,0,0, //Ref,Feedback,Err,ErrPre
-		0.8, //Kp  0.8
-		0.1,//Ki
+		0.0002, //Kp  0.8
+		0.1,//Ki  0.1
 		0,//Kd
 		0,//I
 		0,//Out
