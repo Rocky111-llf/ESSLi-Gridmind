@@ -291,7 +291,7 @@ void LIRunProc(tLI_CTL* tLIHandler)//选择控制模式
 			tLIHandler->pVSC->CtlMode = VACCTL;
 			tLIHandler->pVSC->GFMCtlMode = VFCTL;
 			tLIHandler->pVSC->GFMCtlMode_Pre = 0XFF-1;
-			tLIHandler->pVSC->Vac_Cmd = 0.0; // 默认交流电压命令值为0
+			tLIHandler->pVSC->Vac_Cmd = 0.8; // 默认交流电压命令值为0
 		}else{
 			// 并网状态，默认工作在直流电流控制模式下
 			tLIHandler->Io_PID.Ref = 0.0f;
