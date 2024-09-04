@@ -382,6 +382,9 @@ void LIRunProc(tLI_CTL* tLIHandler)//选择控制模式
 		{
 			tLIHandler->VLimH_PID.I = 0.0;
 			tLIHandler->VLimL_PID.I = 0.0;
+			// 清跟网PQ控制的I
+			tLIHandler->pVSC->P_PID.I = 0.0;
+			tLIHandler->pVSC->Q_PID.I = 0.0;
 			tLIHandler->pVSC->Id_Cmd = 0.0;
 			tLIHandler->pVSC->Iq_Cmd = 0.0;
 			tLIHandler->ChgSts = CHG_PQ_LI;
