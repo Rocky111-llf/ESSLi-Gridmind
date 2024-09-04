@@ -131,7 +131,7 @@ const PID VarDef(PQ_PID_INIT,DevID) = {0,0,0,0, //Ref,Feedback,Err,ErrPre
 		10,//Tf
 		0};//UF;
 const PID VarDef(IDQ_PID_INIT,DevID) = {0,0,0,0, //Ref,Feedback,Err,ErrPre
-		CURLOOP_Kp, //Kp
+		CURLOOP_Kp, //Kp=0.002
 		1,//Ki
 		0,//Kd
 		0,//I

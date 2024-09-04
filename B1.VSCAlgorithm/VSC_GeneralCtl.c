@@ -161,10 +161,16 @@ void VSCSysCtl(tVSC_CTL* tVSCHandler)
 	{
 		// 外环无PI的跟网定功率控制
 		//有功分量
-		tVSCHandler->Id_Ref = tVSCHandler->P_Ref/tVSCHandler->UGrid.P2R.d;
+		tVSCHandler->P_PID.Ref = tVSCHandler->P_Ref;
+		tVSCHandler->P_PID.FeedBack = tVSCHandler->P_AC_AVG;
+		PIDProc(&tVSCHandler->P_PID);
+		tVSCHandler->Id_Ref = tVSCHandler->P_PID.Out;
 		HardLimit(tVSCHandler->Id_Ref, -1.1f, 1.1f);
 		//无功分量
-		tVSCHandler->Iq_Ref = -tVSCHandler->Q_Ref/tVSCHandler->UGrid.P2R.d;									//221004 修改，无功功率指令变号
+		tVSCHandler->Q_PID.Ref = tVSCHandler->Q_Ref;
+		tVSCHandler->Q_PID.FeedBack = tVSCHandler->Q_AC_AVG;
+		PIDProc(&tVSCHandler->Q_PID);
+		tVSCHandler->Iq_Ref = tVSCHandler->Q_PID.Out;
 		HardLimit(tVSCHandler->Iq_Ref, -1.1f, 1.1f);
 	}
 	else if(tVSCHandler->CtlMode == VQCTL)
