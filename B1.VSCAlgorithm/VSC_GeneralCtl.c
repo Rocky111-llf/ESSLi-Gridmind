@@ -169,13 +169,13 @@ void VSCSysCtl(tVSC_CTL* tVSCHandler)
 		//有功分量
 		tVSCHandler->P_PID.Ref = tVSCHandler->P_Ref;
 		tVSCHandler->P_PID.FeedBack = tVSCHandler->P_AC_AVG;
-		PIDProc(&tVSCHandler->P_PID);
+		PIDProc_Int_Sepa(&tVSCHandler->P_PID);
 		tVSCHandler->Id_Ref = tVSCHandler->P_PID.Out;
 		HardLimit(tVSCHandler->Id_Ref, -1.1f, 1.1f);
 		//无功分量
 		tVSCHandler->Q_PID.Ref = tVSCHandler->Q_Ref;
 		tVSCHandler->Q_PID.FeedBack = tVSCHandler->Q_AC_AVG;
-		PIDProc(&tVSCHandler->Q_PID);
+		PIDProc_Int_Sepa(&tVSCHandler->Q_PID);
 		tVSCHandler->Iq_Ref = tVSCHandler->Q_PID.Out;
 		HardLimit(tVSCHandler->Iq_Ref, -1.1f, 1.1f);
 	}

@@ -35,45 +35,58 @@ void PIDProc(PID* l_PID)
 	float	Tf;
 	s8  UF;
 */
-	// float Temp;
-	// l_PID->ErrPre = l_PID->	Err;
-	// l_PID->Err = l_PID->Ref - l_PID->FeedBack;
-	// if(((l_PID->UF==-1)&&(l_PID->Err>0.0f))||((l_PID->UF==1)&&(l_PID->Err<0.0f))||l_PID->UF==0)
-	// 	l_PID->I += l_PID->Err*l_PID->Ki;
-	// Temp = (l_PID->Kp*(l_PID->Err*l_PID->Tf + l_PID->I));
-	// if(Temp < l_PID->OutMin)
-	// {
-	// 	l_PID->Out = l_PID->OutMin;
-	// 	l_PID->UF = -1;
-	// }
-	// else if(Temp > l_PID->OutMax)
-	// {
-	// 	l_PID->Out = l_PID->OutMax;
-	// 	l_PID->UF = 1;
-	// }
-	// else
-	// {
-	// 	l_PID->Out = Temp;
-	// 	l_PID->UF = 0;
-	// }
+	float Temp;
+	l_PID->ErrPre = l_PID->	Err;
+	l_PID->Err = l_PID->Ref - l_PID->FeedBack;
+	if(((l_PID->UF==-1)&&(l_PID->Err>0.0f))||((l_PID->UF==1)&&(l_PID->Err<0.0f))||l_PID->UF==0)
+		l_PID->I += l_PID->Err*l_PID->Ki;
+	Temp = (l_PID->Kp*(l_PID->Err*l_PID->Tf + l_PID->I));
+	if(Temp < l_PID->OutMin)
+	{
+		l_PID->Out = l_PID->OutMin;
+		l_PID->UF = -1;
+	}
+	else if(Temp > l_PID->OutMax)
+	{
+		l_PID->Out = l_PID->OutMax;
+		l_PID->UF = 1;
+	}
+	else
+	{
+		l_PID->Out = Temp;
+		l_PID->UF = 0;
+	}
+}
+
+void PIDProc_Int_Sepa(PID* l_PID)
+{
+// 带积分隔离的PID处理程序 
+/*
+	float Ref;
+	float FeedBack;
+	float Err;
+	float ErrPre;
+	float Kp;
+	float Ki;
+	float Kd;
+	double I;
+	float Out;
+	float	OutMax;
+	float	OutMin;
+	float	Tf;
+	s8  UF;
+*/
 	float Temp;
 	//更新误差
     l_PID->ErrPre=l_PID->Err;
     l_PID->Err=l_PID->Ref-l_PID->FeedBack;
     //积分控制：仅在使用积分分离时应用 
-	if(Ctl_VSC1.CtlMode == PQCTL){
-		if(((l_PID->UF==-1)&&(l_PID->Err>0.0f))||((l_PID->UF==1)&&(l_PID->Err<0.0f))||l_PID->UF==0){
-			if(fabs(l_PID->Err)>ERR_THRE){
-				debug2+=1;4
-				l_PID->I+=l_PID->Err*l_PID->Ki; // 仅当误差大于阈值时，累积积分项
-			}else{
-				debug1+=1;
-			}
-		}
-	}else{
-		// 不使用积分分离策略时，直接累积积分项
-		if(((l_PID->UF==-1)&&(l_PID->Err>0.0f))||((l_PID->UF==1)&&(l_PID->Err<0.0f))||l_PID->UF==0){
-			l_PID->I+=l_PID->Err*l_PID->Ki;
+	if(((l_PID->UF==-1)&&(l_PID->Err>0.0f))||((l_PID->UF==1)&&(l_PID->Err<0.0f))||l_PID->UF==0){
+		if(fabs(l_PID->Err)>ERR_THRE){
+			debug2+=1;
+			l_PID->I+=l_PID->Err*l_PID->Ki; // 仅当误差大于阈值时，累积积分项
+		}else{
+			debug1+=1;
 		}
 	}
 	// 防止积分项饱和
