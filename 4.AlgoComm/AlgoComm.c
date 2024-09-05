@@ -17,10 +17,8 @@
 *PID处理程序
 *
 ****************************************************************************/
-typedef int bool;
-#define true 1
-#define false 0
-void PIDProc(PID* l_PID, bool useIntegralSeparation=false)
+#define ERR_THRE 0.01f
+void PIDProc(PID* l_PID)
 {
 /*
 	float Ref;
@@ -59,22 +57,22 @@ void PIDProc(PID* l_PID, bool useIntegralSeparation=false)
 	// 	l_PID->UF = 0;
 	// }
 	float Temp;
-	float ErrThreshold=0.05f; // 设置积分分离的误差阈值
 	//更新误差
     l_PID->ErrPre=l_PID->Err;
     l_PID->Err=l_PID->Ref-l_PID->FeedBack;
     //积分控制：仅在使用积分分离时应用 
-    if(useIntegralSeparation){
-        if(((l_PID->UF==-1)&&(l_PID->Err>0.0f))||((l_PID->UF==1)&&(l_PID->Err<0.0f))||l_PID->UF==0){
-            if(fabs(l_PID->Err)>ErrThreshold){
-                l_PID->I+=l_PID->Err*l_PID->Ki; // 仅当误差大于阈值时，累积积分项
-            }
-        }
-    }else{// 不使用积分分离策略时，直接累积积分项
-        if(((l_PID->UF==-1)&&(l_PID->Err>0.0f))||((l_PID->UF==1)&&(l_PID->Err<0.0f))||l_PID->UF==0){
-            l_PID->I+=l_PID->Err*l_PID->Ki;
-        }
-    }
+	if(Ctl_VSC1.CtlMode == PQCTL){
+		if(((l_PID->UF==-1)&&(l_PID->Err>0.0f))||((l_PID->UF==1)&&(l_PID->Err<0.0f))||l_PID->UF==0){
+			if(fabs(l_PID->Err)>ERR_THRE){
+				l_PID->I+=l_PID->Err*l_PID->Ki; // 仅当误差大于阈值时，累积积分项
+			}
+		}
+	}else{
+		// 不使用积分分离策略时，直接累积积分项
+		if(((l_PID->UF==-1)&&(l_PID->Err>0.0f))||((l_PID->UF==1)&&(l_PID->Err<0.0f))||l_PID->UF==0){
+			l_PID->I+=l_PID->Err*l_PID->Ki;
+		}
+	}
 	// 防止积分项饱和
     if(l_PID->I>l_PID->OutMax){
         l_PID->I=l_PID->OutMax;
