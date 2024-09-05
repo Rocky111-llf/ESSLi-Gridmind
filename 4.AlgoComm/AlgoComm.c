@@ -11,13 +11,12 @@
 *****************************************************************************/
 #include <stdio.h>
 #include "Includings.h"
-#include "math.h"
+#include <math.h>
 /****************************************************************************
 *
 *PID处理程序
 *
 ****************************************************************************/
-#define ERR_THRE 0.001f
 void PIDProc(PID* l_PID)
 {
 /*
@@ -58,6 +57,7 @@ void PIDProc(PID* l_PID)
 	}
 }
 
+#define ERR_THRE 0.001f
 void PIDProc_Int_Sepa(PID* l_PID)
 {
 // 带积分隔离的PID处理程序 
@@ -84,7 +84,7 @@ void PIDProc_Int_Sepa(PID* l_PID)
 	if(((l_PID->UF==-1)&&(l_PID->Err>0.0f))||((l_PID->UF==1)&&(l_PID->Err<0.0f))||l_PID->UF==0){
 		if(fabs(l_PID->Err)>ERR_THRE){
 			debug2+=1;
-			l_PID->I+=l_PID->Err*l_PID->Ki; // 仅当误差大于阈值时，累积积分项
+			l_PID->I += l_PID->Err*l_PID->Ki; // 仅当误差大于阈值时，累积积分项
 		}else{
 			debug1+=1;
 		}
