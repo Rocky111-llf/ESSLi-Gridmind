@@ -176,7 +176,7 @@ extern float ComDatF[];
 #define QVLOOP 
 
 // ÊÇ·ñ¹ÂÍøÆô¶¯
-#define ISLANDED_START
+//#define ISLANDED_START
 
 extern float debug1;
 extern float debug2;

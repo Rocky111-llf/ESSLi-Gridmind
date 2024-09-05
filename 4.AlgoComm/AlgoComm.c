@@ -9,13 +9,18 @@
 *修改时间 ：
 *说明     ：
 *****************************************************************************/
+#include <stdio.h>
 #include "Includings.h"
+#include "math.h"
 /****************************************************************************
 *
 *PID处理程序
 *
 ****************************************************************************/
-void PIDProc(PID* l_PID)
+typedef int bool;
+#define true 1
+#define false 0
+void PIDProc(PID* l_PID, bool useIntegralSeparation=false)
 {
 /*
 	float Ref;
@@ -32,27 +37,63 @@ void PIDProc(PID* l_PID)
 	float	Tf;
 	s8  UF;
 */
+	// float Temp;
+	// l_PID->ErrPre = l_PID->	Err;
+	// l_PID->Err = l_PID->Ref - l_PID->FeedBack;
+	// if(((l_PID->UF==-1)&&(l_PID->Err>0.0f))||((l_PID->UF==1)&&(l_PID->Err<0.0f))||l_PID->UF==0)
+	// 	l_PID->I += l_PID->Err*l_PID->Ki;
+	// Temp = (l_PID->Kp*(l_PID->Err*l_PID->Tf + l_PID->I));
+	// if(Temp < l_PID->OutMin)
+	// {
+	// 	l_PID->Out = l_PID->OutMin;
+	// 	l_PID->UF = -1;
+	// }
+	// else if(Temp > l_PID->OutMax)
+	// {
+	// 	l_PID->Out = l_PID->OutMax;
+	// 	l_PID->UF = 1;
+	// }
+	// else
+	// {
+	// 	l_PID->Out = Temp;
+	// 	l_PID->UF = 0;
+	// }
 	float Temp;
-	l_PID->ErrPre = l_PID->	Err;
-	l_PID->Err = l_PID->Ref - l_PID->FeedBack;
-	if(((l_PID->UF==-1)&&(l_PID->Err>0.0f))||((l_PID->UF==1)&&(l_PID->Err<0.0f))||l_PID->UF==0)
-		l_PID->I += l_PID->Err*l_PID->Ki;
-	Temp = (l_PID->Kp*(l_PID->Err*l_PID->Tf + l_PID->I));
-	if(Temp < l_PID->OutMin)
-	{
-		l_PID->Out = l_PID->OutMin;
-		l_PID->UF = -1;
-	}
-	else if(Temp > l_PID->OutMax)
-	{
-		l_PID->Out = l_PID->OutMax;
-		l_PID->UF = 1;
-	}
-	else
-	{
-		l_PID->Out = Temp;
-		l_PID->UF = 0;
-	}
+	float ErrThreshold=0.05f; // 设置积分分离的误差阈值
+	//更新误差
+    l_PID->ErrPre=l_PID->Err;
+    l_PID->Err=l_PID->Ref-l_PID->FeedBack;
+    //积分控制：仅在使用积分分离时应用 
+    if(useIntegralSeparation){
+        if(((l_PID->UF==-1)&&(l_PID->Err>0.0f))||((l_PID->UF==1)&&(l_PID->Err<0.0f))||l_PID->UF==0){
+            if(fabs(l_PID->Err)>ErrThreshold){
+                l_PID->I+=l_PID->Err*l_PID->Ki; // 仅当误差大于阈值时，累积积分项
+            }
+        }
+    }else{// 不使用积分分离策略时，直接累积积分项
+        if(((l_PID->UF==-1)&&(l_PID->Err>0.0f))||((l_PID->UF==1)&&(l_PID->Err<0.0f))||l_PID->UF==0){
+            l_PID->I+=l_PID->Err*l_PID->Ki;
+        }
+    }
+	// 防止积分项饱和
+    if(l_PID->I>l_PID->OutMax){
+        l_PID->I=l_PID->OutMax;
+    }else if(l_PID->I<l_PID->OutMin){
+        l_PID->I=l_PID->OutMin;
+    }
+	// 计算控制输出
+    Temp=l_PID->Kp*(l_PID->Err*l_PID->Tf+l_PID->I);
+	// 输出限幅
+    if(Temp<l_PID->OutMin){
+        l_PID->Out=l_PID->OutMin;
+        l_PID->UF=-1;
+    }else if(Temp>l_PID->OutMax){
+        l_PID->Out=l_PID->OutMax;
+        l_PID->UF=1;
+    }else{
+        l_PID->Out=Temp;
+        l_PID->UF=0;
+    }
 }
 
 /****************************************************************************
