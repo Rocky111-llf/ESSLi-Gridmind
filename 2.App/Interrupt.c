@@ -16,6 +16,7 @@
   ******************************************************************************
   */
 #include "Includings.h"
+#include <math.h>
 
 SINCOS_t ThetaCCSC_GridSincos;
 
