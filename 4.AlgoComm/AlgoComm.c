@@ -64,8 +64,9 @@ void PIDProc(PID* l_PID)
 	if(Ctl_VSC1.CtlMode == PQCTL){
 		if(((l_PID->UF==-1)&&(l_PID->Err>0.0f))||((l_PID->UF==1)&&(l_PID->Err<0.0f))||l_PID->UF==0){
 			if(fabs(l_PID->Err)>ERR_THRE){
-				debug1+=1;
 				l_PID->I+=l_PID->Err*l_PID->Ki; // 仅当误差大于阈值时，累积积分项
+			}else{
+				debug1+=1;
 			}
 		}
 	}else{
