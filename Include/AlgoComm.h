@@ -106,6 +106,7 @@ typedef struct
 }RANGEJUDGE_t;
 
 void PIDProc(PID* l_PID);
+void PIDProc_Int_Sepa(PID* l_PID);
 void PIDProc_D(PID* l_PID);
 void PeakDetect(PEAKDET *v);
 #if !LPFCALC_MACRO
