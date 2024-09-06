@@ -78,6 +78,7 @@ void PL_IntrHandler(void)
 				Ctl_VSC1.Vq_PID.I = 0;
 				Ctl_VSC1.Theta = 0;
 			}
+			// TODO:»¹Î´¿¼ÂÇPQ·ûºÅÎÊÌâ
 			Ctl_VSC1.Theta += ((Ctl_VSC1.P_Ref - Ctl_VSC1.P_AC_AVG)*DROOP_Kp + 1.0)*2.0*PI*50.0/INTFRE;
 			if(Ctl_VSC1.Theta > THETAMAX)
 			{

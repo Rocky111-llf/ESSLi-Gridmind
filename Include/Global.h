@@ -176,7 +176,7 @@ extern float ComDatF[];
 #define QVLOOP 
 
 // ÊÇ·ñ¹ÂÍøÆô¶¯
-#define ISLANDED_START
+// #define ISLANDED_START
 
 #define DROOP_Kp 0.1
 #define DROOP_Kq 0.1
