@@ -224,7 +224,6 @@ void VSCSysCtl(tVSC_CTL* tVSCHandler)
 			tVSCHandler->Vd_PID.FeedBack = tVSCHandler->UGrid.P2R.d;
 			PIDProc(&tVSCHandler->Vd_PID);
 			tVSCHandler->Id_Ref = tVSCHandler->Vd_PID.Out;
-
 			// q轴电压跟踪0
 			tVSCHandler->Vq_PID.Ref = 0;
 			tVSCHandler->Vq_PID.FeedBack = tVSCHandler->UGrid.P2R.q;
@@ -275,7 +274,7 @@ void VSCControlLoop(tVSC_CTL* tVSCHandler)
 			tVSCHandler->IqPID.FeedBack = tVSCHandler->IGrid.P2R.q;
 			PIDProc(&tVSCHandler->IqPID);
 			//OutV Calc
-			float VRatio = (NORM_V/(tVSCHandler->DCV_Bus*(RATED_DCV*0.5f*1.154f)));
+			float VRatio = (NORM_V/(tVSCHandler->DCV_Bus*(RATED_DCV*0.5f*1.154f)));//1.154=2/sqrt(3);
 			tVSCHandler->UConv.P2R.d = (tVSCHandler->UGrid.P2R.d - tVSCHandler->IdPID.Out + (tVSCHandler->IGrid.P2R.q*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
 			tVSCHandler->UConv.P2R.q = (tVSCHandler->UGrid.P2R.q - tVSCHandler->IqPID.Out - (tVSCHandler->IGrid.P2R.d*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
 
@@ -296,6 +295,19 @@ void VSCControlLoop(tVSC_CTL* tVSCHandler)
 				float VRatio = (NORM_V/(tVSCHandler->DCV_Bus*(RATED_DCV*0.5f*1.154f)));
 				tVSCHandler->UConv.P2R.d = (tVSCHandler->Id_Ref)*VRatio;
 				tVSCHandler->UConv.P2R.q = (tVSCHandler->Iq_Ref)*VRatio;
+			    // //交流电流环
+				// //Id
+				// tVSCHandler->IdPID.Ref = tVSCHandler->Id_Ref;
+				// tVSCHandler->IdPID.FeedBack = tVSCHandler->IGrid.P2R.d;
+				// PIDProc(&tVSCHandler->IdPID);
+				// //Iq
+				// tVSCHandler->IqPID.Ref = tVSCHandler->Iq_Ref;
+				// tVSCHandler->IqPID.FeedBack = tVSCHandler->IGrid.P2R.q;
+				// PIDProc(&tVSCHandler->IqPID);
+				// //OutV Calc
+				// float VRatio = (NORM_V/(tVSCHandler->DCV_Bus*(RATED_DCV*0.5f*1.154f)));//1.154=2/sqrt(3);
+				// tVSCHandler->UConv.P2R.d = (tVSCHandler->UGrid.P2R.d - tVSCHandler->IdPID.Out + (tVSCHandler->IGrid.P2R.q*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
+				// tVSCHandler->UConv.P2R.q = (tVSCHandler->UGrid.P2R.q - tVSCHandler->IqPID.Out - (tVSCHandler->IGrid.P2R.d*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
 			}
 			//单位圆限幅
 			MagP2R = FastSqrt2((tVSCHandler->UConv.P2R.d*tVSCHandler->UConv.P2R.d)+(tVSCHandler->UConv.P2R.q*tVSCHandler->UConv.P2R.q),&MagP2R_Reci);

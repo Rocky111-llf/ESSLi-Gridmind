@@ -31,7 +31,7 @@
 
 /*额定参数表*/
 #define RATED_S             (3.0e3)
-#define RATED_ACV			(100.0f)
+#define RATED_ACV			(110.0f)
 #define RATED_ACI           ((float)(RATED_S/RATED_ACV/sqrt3))
 #define RATED_DCV			(200.0f)
 #define RATED_DCI			((float)(RATED_S/RATED_DCV))

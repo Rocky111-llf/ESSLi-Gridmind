@@ -286,7 +286,7 @@ void LIRunProc(tLI_CTL* tLIHandler)//选择控制模式
 	switch(tLIHandler->CtlMode){
 	case IDLE_LI:
 		if(tLIHandler->pVSC->ISLANDED){
-			// 孤岛状态，只能运行在VF控制状态下
+		    // 孤岛状态，只能运行在VF控制状态下
 			tLIHandler->ChgSts = CHG_IDLE_LI;
 			tLIHandler->pVSC->CtlMode = VACCTL;
 			tLIHandler->pVSC->GFMCtlMode = VFCTL;
@@ -394,6 +394,7 @@ void LIRunProc(tLI_CTL* tLIHandler)//选择控制模式
 				tLIHandler->pVSC->GFMCtlMode = VFCTL;
 				tLIHandler->pVSC->GFMCtlMode_Pre = 0XFF-1; // 重置VF相位
 				tLIHandler->pVSC->Vac_Cmd = 0.0; // 默认交流电压命令值为0，必须得爬坡，调制波幅值改变快了子模块会报错
+				debug2 +=1;
 			}else{
 				// 并网状态，默认运行在外环解算功率的IDQ控制模式
 				tLIHandler->pVSC->CtlMode = IDQCTL;

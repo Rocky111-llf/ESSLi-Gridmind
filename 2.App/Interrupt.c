@@ -93,9 +93,9 @@ void PL_IntrHandler(void)
 	// SetDAC((Ctl_VSC1.P_AC_AVG),10.0f,sAo0,1);
 	// SetDAC((fabs(Ctl_VSC1.P_PID.Err)),10.0f,sAo0,2);
 	// SetDAC((Ctl_VSC1.Theta),1.0,sAo0,3);
-	SetDAC((Ctl_VSC1.IGrid.P3S.a),10.0f,sAo0,0);
-	SetDAC((Ctl_VSC1.IGrid.P3S.b),10.0f,sAo0,1);
-	SetDAC((Ctl_VSC1.IGrid.P3S.c),10.0f,sAo0,2);
+	SetDAC((Ctl_VSC1.UGrid.P3S.a),10.0f,sAo0,0);
+	SetDAC((Ctl_VSC1.UGrid.P3S.b),10.0f,sAo0,1);
+	SetDAC((Ctl_VSC1.UGrid.P3S.c),10.0f,sAo0,2);
 	// SetDAC((Ctl_VSC1.IGrid.P3S.a),1.2f,sAo0,0);//并网电流
 	// SetDAC((Ctl_VSC1.UGrid.P3S.a),1.2f,sAo0,1);//并网电压
 }
