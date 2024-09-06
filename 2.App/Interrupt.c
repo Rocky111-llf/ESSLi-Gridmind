@@ -68,8 +68,33 @@ void PL_IntrHandler(void)
 			// clarke(&Ctl_VSC1.IGrid.P3S,&Ctl_VSC1.IGrid.P2S);
 			arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
 			// park(&Ctl_VSC1.IGrid.P2S,&Ctl_VSC1.IGrid.P2R,&Ctl_VSC1.ThetaPhase_GridSincos);
-		}else{
-			// TODO：其他构网控制
+		}else if(Ctl_VSC1.GFMCtlMode == DROOPCTL){
+			// 下垂控制
+			if(Ctl_VSC1.GFMCtlMode != Ctl_VSC1.GFMCtlMode_Pre){
+				// 切换到这个模式时，清PQ_PID和交流电压PID的I,清零Theta值
+				Ctl_VSC1.P_PID.I = 0;
+				Ctl_VSC1.Q_PID.I = 0;
+				Ctl_VSC1.Vd_PID.I = 0;
+				Ctl_VSC1.Vq_PID.I = 0;
+				Ctl_VSC1.Theta = 0;
+			}
+			Ctl_VSC1.Theta += ((Ctl_VSC1.P_Ref - Ctl_VSC1.P_AC_AVG)*DROOP_Kp + 1.0)*2.0*PI*50.0/INTFRE;
+			if(Ctl_VSC1.Theta > THETAMAX)
+			{
+				Ctl_VSC1.Theta -= THETAMAX;
+			}
+			else if(Ctl_VSC1.Theta < THETAMIN)
+				Ctl_VSC1.Theta += THETAMAX;
+			arm_sin_cos_f32_1(Ctl_VSC1.Theta, &Ctl_VSC1.Theta_GridSincos);
+			//电压坐标变换
+			clarke(&Ctl_VSC1.UGrid.P3S,&Ctl_VSC1.UGrid.P2S);
+			park(&Ctl_VSC1.UGrid.P2S,&Ctl_VSC1.UGrid.P2R,&Ctl_VSC1.Theta_GridSincos);
+			//电流坐标变换
+			Ctl_VSC1.ThetaPhase = Ctl_VSC1.Theta-THETA30DEG;
+			// VF控制空载时不需要对电流进行坐标变换
+			clarke(&Ctl_VSC1.IGrid.P3S,&Ctl_VSC1.IGrid.P2S);
+			arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
+			park(&Ctl_VSC1.IGrid.P2S,&Ctl_VSC1.IGrid.P2R,&Ctl_VSC1.ThetaPhase_GridSincos);
 		}
 	}
 	//控制环路计算

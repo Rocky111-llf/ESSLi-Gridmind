@@ -29,7 +29,7 @@ typedef enum {
 //枚举定义
 typedef enum{PQCTL = 0,VQCTL = 1,IDQCTL = 2,VACCTL = 3} CTLMODE;
 typedef enum{DC_PRECHG = 0,AC_PRECHG = 1} STARTMODE;
-typedef enum{VFCTL = 0,PSCTL = 1,VSGCTL = 2} GFMMODE;
+typedef enum{VFCTL = 0,DROOPCTL = 1,VSGCTL = 2} GFMMODE;
 
 //桥臂电流结构体定义
 typedef struct {
