@@ -55,6 +55,7 @@ extern tLI_CTL Ctl_LI1;
 #define sqrt2 (1.4142136f)
 #define OneDivThree (0.33333333f)
 #define PI   (3.1415926f)
+#define TWO_PI_THIRD (2.0*PI/3.0) //定义相位
 
 #define CARD_TYPE_MAIN	0x0
 #define CARD_TYPE_OPT	0x1
@@ -164,22 +165,11 @@ static INLINE void f32Lim(float * x, float min, float max)
 #define HardLimit(A,min,max)	(((A)>(max))?((A)=(max)):(((A)<(min))?((A)=(min)):((A)=(A))))			//为避免宏函数异常，A/min/max均为变量或常数
 #define SetDAC(Value,Max,Handle,Ch)	((Handle).Cmd->bit.AOdat[(Ch)] = (1.0f/(Max)*32768)*(Value))
 
-// 串口屏参数辅助下发定义
-extern float ComDatF[];
-#define VSC_CTLMODE ComDatF[0]
-#define VSC_PREF ComDatF[1]
-#define VSC_QREF ComDatF[2]
-#define VSC_UACREF ComDatF[3]
-#define VSC_UDCREF ComDatF[4]
-
-// 是否启用无功外环定义
-#define QVLOOP 
+// 是否启用无功外环定义,暂时弃用
+// #define QVLOOP 
 
 // 是否孤网启动
 // #define ISLANDED_START
-
-#define DROOP_Kp 0.1
-#define DROOP_Kq 0.1
 
 extern float debug1;
 extern float debug2;

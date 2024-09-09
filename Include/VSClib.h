@@ -29,7 +29,7 @@ typedef enum {
 //枚举定义
 typedef enum{PQCTL = 0,VQCTL = 1,IDQCTL = 2,VACCTL = 3} CTLMODE;
 typedef enum{DC_PRECHG = 0,AC_PRECHG = 1} STARTMODE;
-typedef enum{VFCTL = 0,DROOPCTL = 1,VSGCTL = 2} GFMMODE;
+typedef enum{VFCTL = 0,DROOPCTL = 1,VSGCTL = 2,UniversalGFM=3} GFMMODE;
 
 //桥臂电流结构体定义
 typedef struct {
@@ -81,7 +81,7 @@ typedef struct
 //系统控制内部运行变量
 	PARA3S2S2R UGrid,UConv,IGrid;					//电网电压
 	PARA3S2S2R Iconv,Ucap;
-	float Omega,Theta,PLLFre;
+	float Omega,deltaOmega,Vmag,deltaVmag,Theta,PLLFre;
 	SINCOS_t Theta_GridSincos;
 	float ThetaPhase;
 	SINCOS_t ThetaPhase_GridSincos;

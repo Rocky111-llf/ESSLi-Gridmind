@@ -119,17 +119,54 @@ void Task500ms(void)
 float ComDatF[5];
 void AuxCom(u8 Group, float *Dat)
 {
-	switch(Group){//参数组
-	case 0://
-		break;
-	default:
-		break;
-	}
 	ComDatF[0] = Dat[0];
 	ComDatF[1] = Dat[1];
 	ComDatF[2] = Dat[2];
 	ComDatF[3] = Dat[3];
 	ComDatF[4] = Dat[4];
+
+	switch(Group){//参数组
+	case 0:// 构网控制参数组
+		Ctl_VSC1.CtlMode_Ref = VACCTL;
+		Ctl_VSC1.CtlMode = VACCTL;
+		Ctl_VSC1.GFMCtlMode = ComDatF[0];
+		switch(Ctl_VSC1.GFMCtlMode){
+			case VFCTL:
+				Ctl_VSC1.Vac_Cmd = ComDatF[1];
+				break;
+			case DROOPCTL:
+				Ctl_VSC1.Vac_Cmd = ComDatF[1];
+				Ctl_VSC1.P_Cmd = ComDatF[2];
+				Ctl_VSC1.Q_Cmd = ComDatF[3];
+				break;
+			case VSGCTL:
+				Ctl_VSC1.Vac_Cmd = ComDatF[1];
+				Ctl_VSC1.P_Cmd = ComDatF[2];
+				Ctl_VSC1.Q_Cmd = ComDatF[3];
+				break;
+			case UniversalGFM:
+				Ctl_VSC1.Vac_Cmd = ComDatF[1];
+				Ctl_VSC1.P_Cmd = ComDatF[2];
+				Ctl_VSC1.Q_Cmd = ComDatF[3];
+				break;
+			default:
+				break;
+		}
+		break;
+	case 1:// 跟网定功率控制
+		Ctl_VSC1.P_Cmd = ComDatF[0];
+		Ctl_VSC1.Q_Cmd = ComDatF[1];
+		break;
+	case 2:// 跟网定直流电压控制
+		Ctl_VSC1.Vdc_Cmd = ComDatF[0];
+		Ctl_VSC1.Q_Cmd = ComDatF[1];
+		break;
+	case 3:// 跟网电流控制
+		// 暂时未定义
+		break;
+	default:
+		break;
+	}
 }
 
 /*************************************************

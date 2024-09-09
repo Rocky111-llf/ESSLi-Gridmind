@@ -29,7 +29,6 @@ void PL_IntrHandler(void)
 	VSCAnalogNormaliz(&Ctl_VSC1);
 // 电压电流有效值计算与滤波，功率计算与滤波
 	VSCRMS_PQCalc(&Ctl_VSC1);
-
 	if(Ctl_VSC1.CtlMode != VACCTL){
 		// 跟网控制
 		//检测电压电流坐标变换及PLL
@@ -41,6 +40,16 @@ void PL_IntrHandler(void)
 		clarke(&Ctl_VSC1.IGrid.P3S,&Ctl_VSC1.IGrid.P2S);									//3S-2S
 		arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
 		park(&Ctl_VSC1.IGrid.P2S,&Ctl_VSC1.IGrid.P2R,&Ctl_VSC1.ThetaPhase_GridSincos);		//2S-2R
+		// 跟网控制
+		// 功率外环,外环含PI的跟网定功率控制
+		// 有功分量
+		Ctl_VSC1.P_PID.Ref = Ctl_VSC1.P_Ref;
+		Ctl_VSC1.P_PID.FeedBack = Ctl_VSC1.P_AC_AVG;
+		PIDProc_Int_Sepa(&Ctl_VSC1.P_PID);
+		// 无功分量,控制信号需要反相
+		Ctl_VSC1.Q_PID.Ref = -Ctl_VSC1.Q_Ref;
+		Ctl_VSC1.Q_PID.FeedBack = -Ctl_VSC1.Q_AC_AVG;
+		PIDProc_Int_Sepa(&Ctl_VSC1.Q_PID);
 	}else{
 		// 构网控制
 		// 功率外环
@@ -51,52 +60,59 @@ void PL_IntrHandler(void)
 				Ctl_VSC1.Theta = 0;
 				Ctl_VSC1.GFMCtlMode_Pre = Ctl_VSC1.GFMCtlMode;
 			}
-			Ctl_VSC1.Theta += 50*2*PI/INTFRE; // VCO
-			if(Ctl_VSC1.Theta > THETAMAX)
-			{
-				Ctl_VSC1.Theta -= THETAMAX;
-			}
-			else if(Ctl_VSC1.Theta < THETAMIN)
-				Ctl_VSC1.Theta += THETAMAX;
-			arm_sin_cos_f32_1(Ctl_VSC1.Theta, &Ctl_VSC1.Theta_GridSincos);
-			//电压坐标变换
-			clarke(&Ctl_VSC1.UGrid.P3S,&Ctl_VSC1.UGrid.P2S);
-			park(&Ctl_VSC1.UGrid.P2S,&Ctl_VSC1.UGrid.P2R,&Ctl_VSC1.Theta_GridSincos);
-			//电流坐标变换
-			Ctl_VSC1.ThetaPhase = Ctl_VSC1.Theta-THETA30DEG;
-			// VF控制空载时不需要对电流进行坐标变换
-			// clarke(&Ctl_VSC1.IGrid.P3S,&Ctl_VSC1.IGrid.P2S);
-			arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
-			// park(&Ctl_VSC1.IGrid.P2S,&Ctl_VSC1.IGrid.P2R,&Ctl_VSC1.ThetaPhase_GridSincos);
+			Ctl_VSC1.Omega = 50.0f*2*PI;
+			Ctl_VSC1.Theta += Ctl_VSC1.Omega/INTFRE; // VCO
+			//交流电压通过辅助下发的第四个附参设定，通过tVSCHandler->Vac_Cmd传递给tVSCHandler->Vac_ref
 		}else if(Ctl_VSC1.GFMCtlMode == DROOPCTL){
 			// 下垂控制
 			if(Ctl_VSC1.GFMCtlMode != Ctl_VSC1.GFMCtlMode_Pre){
 				// 切换到这个模式时，清PQ_PID和交流电压PID的I,清零Theta值
-				Ctl_VSC1.P_PID.I = 0;
-				Ctl_VSC1.Q_PID.I = 0;
 				Ctl_VSC1.Vd_PID.I = 0;
 				Ctl_VSC1.Vq_PID.I = 0;
 				Ctl_VSC1.Theta = 0;
+				Ctl_VSC1.GFMCtlMode_Pre = Ctl_VSC1.GFMCtlMode;
 			}
 			// TODO:还未考虑PQ符号问题
-			Ctl_VSC1.Theta += ((Ctl_VSC1.P_Ref - Ctl_VSC1.P_AC_AVG)*DROOP_Kp + 1.0)*2.0*PI*50.0/INTFRE;
-			if(Ctl_VSC1.Theta > THETAMAX)
-			{
-				Ctl_VSC1.Theta -= THETAMAX;
-			}
-			else if(Ctl_VSC1.Theta < THETAMIN)
-				Ctl_VSC1.Theta += THETAMAX;
-			arm_sin_cos_f32_1(Ctl_VSC1.Theta, &Ctl_VSC1.Theta_GridSincos);
-			//电压坐标变换
-			clarke(&Ctl_VSC1.UGrid.P3S,&Ctl_VSC1.UGrid.P2S);
-			park(&Ctl_VSC1.UGrid.P2S,&Ctl_VSC1.UGrid.P2R,&Ctl_VSC1.Theta_GridSincos);
-			//电流坐标变换
-			Ctl_VSC1.ThetaPhase = Ctl_VSC1.Theta-THETA30DEG;
-			// VF控制空载时不需要对电流进行坐标变换
-			clarke(&Ctl_VSC1.IGrid.P3S,&Ctl_VSC1.IGrid.P2S);
-			arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
-			park(&Ctl_VSC1.IGrid.P2S,&Ctl_VSC1.IGrid.P2R,&Ctl_VSC1.ThetaPhase_GridSincos);
+			Ctl_VSC1.Omega =((Ctl_VSC1.P_Ref - Ctl_VSC1.P_AC_AVG)*Dp_Droop+Omega0)*2.0*PI*50.0;
+			Ctl_VSC1.Theta += Ctl_VSC1.Omega/INTFRE; // 累加得到相角,INTFRE为中断频率
+			Ctl_VSC1.Vmag = ((Ctl_VSC1.Q_AC_AVG - Ctl_VSC1.Q_Ref)*Dq_Droop+E0);
+			Ctl_VSC1.Vac_Ref = Ctl_VSC1.Vmag;
+		}else if(Ctl_VSC1.GFMCtlMode == VSGCTL){
+			//TODO VSG控制
+			Ctl_VSC1.deltaOmega += ((Ctl_VSC1.P_Ref - Ctl_VSC1.P_AC_AVG)-Dpvsg*Ctl_VSC1.deltaOmega)/Jvsg/INTFRE;
+			Ctl_VSC1.Omega = (Ctl_VSC1.deltaOmega + 1.0)*2.0*PI*50.0;
+			Ctl_VSC1.Theta += Ctl_VSC1.Omega/INTFRE; // 累加得到相角,INTFRE为中断频率
+			Ctl_VSC1.deltaVmag += ((Ctl_VSC1.Q_AC_AVG-Ctl_VSC1.Q_Ref)-Dqvsg*Ctl_VSC1.deltaOmega)/Kqvsg/INTFRE;
+			Ctl_VSC1.Vmag = Ctl_VSC1.deltaVmag+E0;
+			Ctl_VSC1.Vac_Ref = Ctl_VSC1.Vmag;
 		}
+		else{
+			//TODO 统一构网控制
+		    //有功P-w环控制
+			Ctl_VSC1.deltaOmega += (UniA*(Ctl_VSC1.P_Ref - Ctl_VSC1.P_AC_AVG)-UniB*Ctl_VSC1.deltaOmega)/INTFRE;
+			Ctl_VSC1.Omega = (Ctl_VSC1.deltaOmega + Omega0)*50.0f*2.0f*PI;
+			//无功Q-V环控制
+			Ctl_VSC1.deltaVmag += (UniC*(Ctl_VSC1.Q_AC-Ctl_VSC1.Q_Ref)-UniD*Ctl_VSC1.deltaVmag)/INTFRE;
+			Ctl_VSC1.Vmag = Ctl_VSC1.deltaVmag+E0;
+			Ctl_VSC1.Vac_Ref = Ctl_VSC1.Vmag;
+		}
+		//构网功率外环得到Theta和Vmag,利用Theta进行网侧电压和电流的派克变换
+		if(Ctl_VSC1.Theta > THETAMAX)
+		{
+			Ctl_VSC1.Theta -= THETAMAX;
+		}
+		else if(Ctl_VSC1.Theta < THETAMIN)
+			Ctl_VSC1.Theta += THETAMAX;
+		arm_sin_cos_f32_1(Ctl_VSC1.Theta, &Ctl_VSC1.Theta_GridSincos);
+		//PCS网侧电压坐标变换
+		clarke(&Ctl_VSC1.UGrid.P3S,&Ctl_VSC1.UGrid.P2S);
+		park(&Ctl_VSC1.UGrid.P2S,&Ctl_VSC1.UGrid.P2R,&Ctl_VSC1.Theta_GridSincos);
+		//PCS网侧电流坐标变换
+		Ctl_VSC1.ThetaPhase = Ctl_VSC1.Theta-THETA30DEG;
+		//VF控制空载时不需要对电流进行坐标变换
+		clarke(&Ctl_VSC1.IGrid.P3S,&Ctl_VSC1.IGrid.P2S);
+		arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
+		park(&Ctl_VSC1.IGrid.P2S,&Ctl_VSC1.IGrid.P2R,&Ctl_VSC1.ThetaPhase_GridSincos);
 	}
 	//控制环路计算
 	VSCControlLoop(&Ctl_VSC1);

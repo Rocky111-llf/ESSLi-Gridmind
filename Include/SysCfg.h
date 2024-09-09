@@ -95,6 +95,33 @@
 #define ACPRECH_VOL_MIN				(0.75f)				//0.8倍线电压峰值
 #define DCPRECH_VOL_MIN				(0.9f)				//0.9倍输入直流电压
 
+//20240908添加功率外环参数
+//下垂系数
+
+#define Omega0 (1.0f)
+#define E0 (1.0f)
+
+#define Dp_Droop 0.002
+#define Dq_Droop 0.002
+
+//VSG参数,20240814改
+#define Jvsg (5.0f)  		//VSG的惯量
+#define Dpvsg (50.0f) 	//VSG有功阻尼
+#define Dqvsg (500.0f)  // VSG无功阻尼
+#define Kqvsg (15.0f)   // VSG无功惯量
+
+//LPF Droop参数,20240814改
+#define Dp_LPF (1.0f/Omega0/Dqvsg) //20240814添加
+#define Dq_LPF (1.0f/Dqvsg)        //20240814添加
+#define omegap (Dpvsg/Jvsg)    //20240814添加
+#define omegaq (Dqvsg/Kqvsg)   //20240814添加
+
+//统一构网控制,20240814改,以VSG为例
+#define UniA (1.0f/Jvsg/Omega0)//Droop A=Dp*∞; LPF Droop A=Dp*omegap;
+#define UniB (Dpvsg/Jvsg)//Droop B=∞ ; LPF Droop B=omegap;
+#define UniC (1.0f/Kqvsg)//Droop C=∞；LPF Droop C=Dq*omegaq
+#define UniD (Dqvsg/Kqvsg)//Droop D=∞；LPF Droop D=omegaq
+
 /**********控制系统相关结束**********/
 
 /**********故障定义区************/

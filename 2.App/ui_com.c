@@ -577,29 +577,6 @@ void DataProc_UART1(void)
 			if((CmdDatBuf_UART1[1] == 0x1))
 			{//控制模式设置
 				AuxCom(CmdDatBuf_UART1[3], (float*)(&CmdDatBuf_UART1[4]));
-				// VSC控制模式更改与参数下发
-				Ctl_VSC1.CtlMode_Ref = (u16)VSC_CTLMODE;
-				Ctl_VSC1.CtlMode = (u16)VSC_CTLMODE;
-				switch(Ctl_VSC1.CtlMode){
-					case PQCTL: // = 0
-						// 跟网定功率控制
-						Ctl_VSC1.P_Cmd = VSC_PREF;
-						Ctl_VSC1.Q_Cmd = VSC_QREF;
-						break;
-					case VQCTL: // = 1
-						Ctl_VSC1.Vdc_Cmd = VSC_UDCREF;
-						Ctl_VSC1.Q_Cmd = VSC_QREF;
-						break;
-					case IDQCTL: // = 2
-						// 暂时未定义，不用设置这个模式
-						break;
-					case VACCTL: // = 3
-						Ctl_VSC1.P_Cmd = VSC_PREF;
-						Ctl_VSC1.Q_Cmd = VSC_QREF;
-#ifdef QVLOOP
-						Ctl_VSC1.Vac_Cmd = VSC_UACREF;
-#endif
-				}
 			}
 			DataTrans_UART1(CMD_DATSET_R,0x1,0x0);
 		}

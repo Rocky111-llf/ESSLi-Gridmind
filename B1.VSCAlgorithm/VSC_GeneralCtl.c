@@ -47,6 +47,12 @@ void VSCParasInit(tVSC_CTL* tVSCHandler)
 #else 
 	tVSCHandler-> ISLANDED = 0;
 #endif
+	// 增加功率环中间变量初始化
+	tVSCHandler->deltaOmega = 0.0f;
+	tVSCHandler->deltaVmag = 0.0f;
+	tVSCHandler->Omega = 0.0f;
+	tVSCHandler->Vmag = 0.0f;
+	tVSCHandler->Theta = 0.0f;
 //PID Init
 	tVSCHandler->ThetaPID = tVSCHandler->THETA_PID_INIT;
 	tVSCHandler->IdPID = tVSCHandler->IDQ_PID_INIT;
@@ -159,23 +165,15 @@ void VSCSysCtl(tVSC_CTL* tVSCHandler)
 {
 	if(tVSCHandler->CtlMode == PQCTL)
 	{
-		// 外环无PI的跟网定功率控制
-		//有功分量
-		tVSCHandler->P_PID.Ref = tVSCHandler->P_Ref;
-		tVSCHandler->P_PID.FeedBack = tVSCHandler->P_AC_AVG;
-		PIDProc_Int_Sepa(&tVSCHandler->P_PID);
+		//无电压环路，直接进入电流环
 		tVSCHandler->Id_Ref = tVSCHandler->P_PID.Out;
 		HardLimit(tVSCHandler->Id_Ref, -1.1f, 1.1f);
-		//无功分量,控制信号需要反相
-		tVSCHandler->Q_PID.Ref = -tVSCHandler->Q_Ref;
-		tVSCHandler->Q_PID.FeedBack = -tVSCHandler->Q_AC_AVG;
-		PIDProc_Int_Sepa(&tVSCHandler->Q_PID);
 		tVSCHandler->Iq_Ref = tVSCHandler->Q_PID.Out;
 		HardLimit(tVSCHandler->Iq_Ref, -1.1f, 1.1f);
 	}
 	else if(tVSCHandler->CtlMode == VQCTL)
 	{
-	//母线电压控制PID
+		//母线电压控制PID
 		tVSCHandler->VBusPID.Ref = tVSCHandler->Vdc_Ref;
 		tVSCHandler->VBusPID.FeedBack = tVSCHandler->DCV_Bus;
 		PIDProc(&tVSCHandler->VBusPID);
@@ -190,7 +188,6 @@ void VSCSysCtl(tVSC_CTL* tVSCHandler)
 	else if(tVSCHandler->CtlMode == IDQCTL)
 	{
 		tVSCHandler->Idc_Ref = I_DC_LIM;													//直流限流值
-
 #if IQTEST
 		if(IqTestEn)
 		{
@@ -208,28 +205,26 @@ void VSCSysCtl(tVSC_CTL* tVSCHandler)
 		else
 			Iq_Ref = 0.0f;
 #endif
-
 		HardLimit(tVSCHandler->Id_Ref, -1.1f, 1.1f);
 		//无功分量
 		HardLimit(tVSCHandler->Iq_Ref, -1.1f, 1.1f);
 	}
 	else if(tVSCHandler->CtlMode == VACCTL)
 	{
-		//构网控制电压外环
-		// 空载时不含电流内环
+		// 构网控制统一电压环
 		// d轴电压跟踪参考值
-		// TODO:如果报错的化,是交流电压参考值爬坡太快,需要调交流参考电压爬坡步长
 		tVSCHandler->Vd_PID.Ref = tVSCHandler->Vac_Ref;
 		tVSCHandler->Vd_PID.FeedBack = tVSCHandler->UGrid.P2R.d;
 		PIDProc(&tVSCHandler->Vd_PID);
 		tVSCHandler->Id_Ref = tVSCHandler->Vd_PID.Out;
 
 		// q轴电压跟踪0
-		tVSCHandler->Vq_PID.Ref = 0;
+		tVSCHandler->Vq_PID.Ref = 0.0f;
 		tVSCHandler->Vq_PID.FeedBack = tVSCHandler->UGrid.P2R.q;
 		PIDProc(&tVSCHandler->Vq_PID);
 		tVSCHandler->Iq_Ref = tVSCHandler->Vq_PID.Out;
 
+		// 参考信号限幅
 		HardLimit(tVSCHandler->Id_Ref, -1.1f, 1.1f);
 		HardLimit(tVSCHandler->Iq_Ref, -1.1f, 1.1f);
 	}
@@ -258,65 +253,40 @@ void VSCControlLoop(tVSC_CTL* tVSCHandler)
 		//外环控制
 		if(tVSCHandler->OutLoopCnt == 0)
 		// 构网电压外环，跟网外环分频10倍
-			VSCSysCtl(tVSCHandler);
-		if (tVSCHandler->CtlMode != VACCTL)
+			VSCSysCtl(tVSCHandler);//电压外环
+		if (tVSCHandler->ISLANDED == 0)
 		{
-			//交流电流环
-			//Id
+			// 双闭环矢量控制电流内环
+			// Id
 			tVSCHandler->IdPID.Ref = tVSCHandler->Id_Ref;
 			tVSCHandler->IdPID.FeedBack = tVSCHandler->IGrid.P2R.d;
 			PIDProc(&tVSCHandler->IdPID);
-			//Iq
+			// Iq
 			tVSCHandler->IqPID.Ref = tVSCHandler->Iq_Ref;
 			tVSCHandler->IqPID.FeedBack = tVSCHandler->IGrid.P2R.q;
 			PIDProc(&tVSCHandler->IqPID);
-			//OutV Calc
+			// OutV Calc
 			float VRatio = (NORM_V/(tVSCHandler->DCV_Bus*(RATED_DCV*0.5f*1.154f)));
 			tVSCHandler->UConv.P2R.d = (tVSCHandler->UGrid.P2R.d - tVSCHandler->IdPID.Out + (tVSCHandler->IGrid.P2R.q*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
 			tVSCHandler->UConv.P2R.q = (tVSCHandler->UGrid.P2R.q - tVSCHandler->IqPID.Out - (tVSCHandler->IGrid.P2R.d*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
-
-			//单位圆限幅
-			MagP2R = FastSqrt2((tVSCHandler->UConv.P2R.d*tVSCHandler->UConv.P2R.d)+(tVSCHandler->UConv.P2R.q*tVSCHandler->UConv.P2R.q),&MagP2R_Reci);
-			if(MagP2R>0.9999999f)
-			{
-				tVSCHandler->UConv.P2R.d = tVSCHandler->UConv.P2R.d*MagP2R_Reci;
-				tVSCHandler->UConv.P2R.q = tVSCHandler->UConv.P2R.q*MagP2R_Reci;
-			}
-			ipark(&tVSCHandler->UConv.P2R,&tVSCHandler->UConv.P2S,&tVSCHandler->ThetaPhase_GridSincos);				//2r to 2s
 		}
 		else
 		{
-			// CtlMode == VACCTL
-			if(tVSCHandler->GFMCtlMode == VFCTL){
-				// 空载时不含电流内环，直接用Id_ref和Iq_ref的参考值等效调制比信号
-				float VRatio = (NORM_V/(tVSCHandler->DCV_Bus*(RATED_DCV*0.5f*1.154f)));
-				tVSCHandler->UConv.P2R.d = (tVSCHandler->Id_Ref)*VRatio;
-				tVSCHandler->UConv.P2R.q = (tVSCHandler->Iq_Ref)*VRatio;
-			}else{
-				// 其他构网控制，采用双闭环矢量控制
-				//交流电流环
-				//Id
-				tVSCHandler->IdPID.Ref = tVSCHandler->Id_Ref;
-				tVSCHandler->IdPID.FeedBack = tVSCHandler->IGrid.P2R.d;
-				PIDProc(&tVSCHandler->IdPID);
-				//Iq
-				tVSCHandler->IqPID.Ref = tVSCHandler->Iq_Ref;
-				tVSCHandler->IqPID.FeedBack = tVSCHandler->IGrid.P2R.q;
-				PIDProc(&tVSCHandler->IqPID);
-				//OutV Calc
-				float VRatio = (NORM_V/(tVSCHandler->DCV_Bus*(RATED_DCV*0.5f*1.154f)));
-				tVSCHandler->UConv.P2R.d = (tVSCHandler->UGrid.P2R.d - tVSCHandler->IdPID.Out + (tVSCHandler->IGrid.P2R.q*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
-				tVSCHandler->UConv.P2R.q = (tVSCHandler->UGrid.P2R.q - tVSCHandler->IqPID.Out - (tVSCHandler->IGrid.P2R.d*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
-			}
-			//单位圆限幅
-			MagP2R = FastSqrt2((tVSCHandler->UConv.P2R.d*tVSCHandler->UConv.P2R.d)+(tVSCHandler->UConv.P2R.q*tVSCHandler->UConv.P2R.q),&MagP2R_Reci);
-			if(MagP2R>0.9999999f)
-			{
-				tVSCHandler->UConv.P2R.d = tVSCHandler->UConv.P2R.d*MagP2R_Reci;
-				tVSCHandler->UConv.P2R.q = tVSCHandler->UConv.P2R.q*MagP2R_Reci;
-			}
-			ipark(&tVSCHandler->UConv.P2R,&tVSCHandler->UConv.P2S,&tVSCHandler->ThetaPhase_GridSincos);
+			// 空载状态下，单电压环，无电流内环
+			// 这里的用Id_ref和Iq_ref的参考值等效调制比信号
+			float VRatio = (NORM_V/(tVSCHandler->DCV_Bus*(RATED_DCV*0.5f*1.154f)));
+			tVSCHandler->UConv.P2R.d = (tVSCHandler->Id_Ref)*VRatio;
+			tVSCHandler->UConv.P2R.q = (tVSCHandler->Iq_Ref)*VRatio;
 		}
+		//单位圆限幅
+		MagP2R = FastSqrt2((tVSCHandler->UConv.P2R.d*tVSCHandler->UConv.P2R.d)+(tVSCHandler->UConv.P2R.q*tVSCHandler->UConv.P2R.q),&MagP2R_Reci);
+		if(MagP2R>0.9999999f)
+		{
+			tVSCHandler->UConv.P2R.d = tVSCHandler->UConv.P2R.d*MagP2R_Reci;
+			tVSCHandler->UConv.P2R.q = tVSCHandler->UConv.P2R.q*MagP2R_Reci;
+		}
+		ipark(&tVSCHandler->UConv.P2R,&tVSCHandler->UConv.P2S,&tVSCHandler->ThetaPhase_GridSincos);				//2r to 2s
+
 		//调制波设置
 		svgen(tVSCHandler);
 
@@ -327,7 +297,6 @@ void VSCControlLoop(tVSC_CTL* tVSCHandler)
 			tVSCHandler->pHBCmd_N->ModWave = (1.0f/3)*(tVSCHandler->PWM_A+tVSCHandler->PWM_B+tVSCHandler->PWM_C);
 	}
 }
-
 
 /*************************************************
  Function: VSCAnalogNormaliz
