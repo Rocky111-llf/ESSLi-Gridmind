@@ -155,10 +155,14 @@ void AuxCom(u8 Group, float *Dat)
 		}
 		break;
 	case 1:// 跟网定功率控制
+		Ctl_VSC1.CtlMode = PQCTL;
+		Ctl_VSC1.CtlMode_Ref = PQCTL;
 		Ctl_VSC1.P_Cmd = ComDatF[0];
 		Ctl_VSC1.Q_Cmd = ComDatF[1];
 		break;
 	case 2:// 跟网定直流电压控制
+		Ctl_VSC1.CtlMode = VQCTL;
+		Ctl_VSC1.CtlMode_Ref = VQCTL;
 		Ctl_VSC1.Vdc_Cmd = ComDatF[0];
 		Ctl_VSC1.Q_Cmd = ComDatF[1];
 		break;
