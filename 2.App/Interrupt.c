@@ -48,8 +48,8 @@ void PL_IntrHandler(void)
 			Ctl_VSC1.P_PID.FeedBack = Ctl_VSC1.P_AC_AVG;
 			PIDProc_Int_Sepa(&Ctl_VSC1.P_PID);
 			// 无功分量,控制信号需要反相
-			Ctl_VSC1.Q_PID.Ref = Ctl_VSC1.Q_Ref;
-			Ctl_VSC1.Q_PID.FeedBack = Ctl_VSC1.Q_AC_AVG;
+			Ctl_VSC1.Q_PID.Ref = -Ctl_VSC1.Q_Ref;
+			Ctl_VSC1.Q_PID.FeedBack = -Ctl_VSC1.Q_AC_AVG;
 			PIDProc_Int_Sepa(&Ctl_VSC1.Q_PID);
 		}
 	}else{
