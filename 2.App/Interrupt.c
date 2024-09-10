@@ -40,16 +40,18 @@ void PL_IntrHandler(void)
 		clarke(&Ctl_VSC1.IGrid.P3S,&Ctl_VSC1.IGrid.P2S);									//3S-2S
 		arm_sin_cos_f32_1(Ctl_VSC1.ThetaPhase,&Ctl_VSC1.ThetaPhase_GridSincos);
 		park(&Ctl_VSC1.IGrid.P2S,&Ctl_VSC1.IGrid.P2R,&Ctl_VSC1.ThetaPhase_GridSincos);		//2S-2R
-		// 跟网控制
-		// 功率外环,外环含PI的跟网定功率控制
-		// 有功分量
-		Ctl_VSC1.P_PID.Ref = Ctl_VSC1.P_Ref;
-		Ctl_VSC1.P_PID.FeedBack = Ctl_VSC1.P_AC_AVG;
-		PIDProc_Int_Sepa(&Ctl_VSC1.P_PID);
-		// 无功分量,控制信号需要反相
-		Ctl_VSC1.Q_PID.Ref = Ctl_VSC1.Q_Ref;
-		Ctl_VSC1.Q_PID.FeedBack = Ctl_VSC1.Q_AC_AVG;
-		PIDProc_Int_Sepa(&Ctl_VSC1.Q_PID);
+		if(Ctl_VSC1.CtlMode == PQCTL){
+			// 跟网控制
+			// 功率外环,外环含PI的跟网定功率控制
+			// 有功分量
+			Ctl_VSC1.P_PID.Ref = Ctl_VSC1.P_Ref;
+			Ctl_VSC1.P_PID.FeedBack = Ctl_VSC1.P_AC_AVG;
+			PIDProc_Int_Sepa(&Ctl_VSC1.P_PID);
+			// 无功分量,控制信号需要反相
+			Ctl_VSC1.Q_PID.Ref = Ctl_VSC1.Q_Ref;
+			Ctl_VSC1.Q_PID.FeedBack = Ctl_VSC1.Q_AC_AVG;
+			PIDProc_Int_Sepa(&Ctl_VSC1.Q_PID);
+		}
 	}else{
 		// 构网控制
 		// 功率外环
