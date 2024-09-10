@@ -267,8 +267,8 @@ void VSCControlLoop(tVSC_CTL* tVSCHandler)
 			PIDProc(&tVSCHandler->IqPID);
 			// OutV Calc
 			float VRatio = (NORM_V/(tVSCHandler->DCV_Bus*(RATED_DCV*0.5f*1.154f)));
-			tVSCHandler->UConv.P2R.d = (tVSCHandler->UGrid.P2R.d - tVSCHandler->IdPID.Out + (tVSCHandler->IGrid.P2R.q*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
-			tVSCHandler->UConv.P2R.q = (tVSCHandler->UGrid.P2R.q - tVSCHandler->IqPID.Out - (tVSCHandler->IGrid.P2R.d*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
+			tVSCHandler->UConv.P2R.d = (tVSCHandler->UGrid.P2R.d + tVSCHandler->IdPID.Out - (tVSCHandler->IGrid.P2R.q*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
+			tVSCHandler->UConv.P2R.q = (tVSCHandler->UGrid.P2R.q + tVSCHandler->IqPID.Out + (tVSCHandler->IGrid.P2R.d*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
 		}
 		else
 		{
@@ -312,9 +312,9 @@ void VSCAnalogNormaliz(tVSC_CTL* tVSCHandler)
 	tVSCHandler->UGrid.P3S.a = (1.0f*ACV_TRANS_G*ACVRATIO/NORM_V/sqrt3)*((s32)*tVSCHandler->ADC_Va-*tVSCHandler->ADC_Vb);
 	tVSCHandler->UGrid.P3S.b = (1.0f*ACV_TRANS_G*ACVRATIO/NORM_V/sqrt3)*((s32)*tVSCHandler->ADC_Vb-*tVSCHandler->ADC_Vc);
 	tVSCHandler->UGrid.P3S.c = (1.0f*ACV_TRANS_G*ACVRATIO/NORM_V/sqrt3)*((s32)*tVSCHandler->ADC_Vc-*tVSCHandler->ADC_Va);
-	tVSCHandler->IGrid.P3S.a = (1.0f*ACI_TRANS_G*ACIRATIO/NORM_I)*(*tVSCHandler->ADC_Ia);
-	tVSCHandler->IGrid.P3S.b = (1.0f*ACI_TRANS_G*ACIRATIO/NORM_I)*(*tVSCHandler->ADC_Ib);
-	tVSCHandler->IGrid.P3S.c = -tVSCHandler->IGrid.P3S.a - tVSCHandler->IGrid.P3S.b;
+	tVSCHandler->IGrid.P3S.a = -(1.0f*ACI_TRANS_G*ACIRATIO/NORM_I)*(*tVSCHandler->ADC_Ia);
+	tVSCHandler->IGrid.P3S.b = -(1.0f*ACI_TRANS_G*ACIRATIO/NORM_I)*(*tVSCHandler->ADC_Ib);
+	tVSCHandler->IGrid.P3S.c = -(-tVSCHandler->IGrid.P3S.a - tVSCHandler->IGrid.P3S.b);
 
 	tVSCHandler->DCV_Bus = (DCVRATIO/RATED_DCV)*(*tVSCHandler->ADC_Vdc);
 	tVSCHandler->DCI_Bus = (DCIRATIO/RATED_DCI)*(*tVSCHandler->ADC_Idc);

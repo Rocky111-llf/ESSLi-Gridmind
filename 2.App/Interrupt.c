@@ -47,8 +47,8 @@ void PL_IntrHandler(void)
 		Ctl_VSC1.P_PID.FeedBack = Ctl_VSC1.P_AC_AVG;
 		PIDProc_Int_Sepa(&Ctl_VSC1.P_PID);
 		// 无功分量,控制信号需要反相
-		Ctl_VSC1.Q_PID.Ref = -Ctl_VSC1.Q_Ref;
-		Ctl_VSC1.Q_PID.FeedBack = -Ctl_VSC1.Q_AC_AVG;
+		Ctl_VSC1.Q_PID.Ref = Ctl_VSC1.Q_Ref;
+		Ctl_VSC1.Q_PID.FeedBack = Ctl_VSC1.Q_AC_AVG;
 		PIDProc_Int_Sepa(&Ctl_VSC1.Q_PID);
 	}else{
 		// 构网控制
@@ -75,14 +75,14 @@ void PL_IntrHandler(void)
 			// TODO:还未考虑PQ符号问题
 			Ctl_VSC1.Omega =((Ctl_VSC1.P_Ref - Ctl_VSC1.P_AC_AVG)*Dp_Droop+Omega0)*2.0*PI*50.0;
 			Ctl_VSC1.Theta += Ctl_VSC1.Omega/INTFRE; // 累加得到相角,INTFRE为中断频率
-			Ctl_VSC1.Vmag = ((Ctl_VSC1.Q_AC_AVG - Ctl_VSC1.Q_Ref)*Dq_Droop+E0);
+			Ctl_VSC1.Vmag = ((Ctl_VSC1.Q_Ref - Ctl_VSC1.Q_AC_AVG)*Dq_Droop+E0);
 			Ctl_VSC1.Vac_Ref = Ctl_VSC1.Vmag;
 		}else if(Ctl_VSC1.GFMCtlMode == VSGCTL){
 			//TODO VSG控制
 			Ctl_VSC1.deltaOmega += ((Ctl_VSC1.P_Ref - Ctl_VSC1.P_AC_AVG)-Dpvsg*Ctl_VSC1.deltaOmega)/Jvsg/INTFRE;
 			Ctl_VSC1.Omega = (Ctl_VSC1.deltaOmega + 1.0)*2.0*PI*50.0;
 			Ctl_VSC1.Theta += Ctl_VSC1.Omega/INTFRE; // 累加得到相角,INTFRE为中断频率
-			Ctl_VSC1.deltaVmag += ((Ctl_VSC1.Q_AC_AVG-Ctl_VSC1.Q_Ref)-Dqvsg*Ctl_VSC1.deltaOmega)/Kqvsg/INTFRE;
+			Ctl_VSC1.deltaVmag += ((Ctl_VSC1.Q_Ref - Ctl_VSC1.Q_AC_AVG)-Dqvsg*Ctl_VSC1.deltaOmega)/Kqvsg/INTFRE;
 			Ctl_VSC1.Vmag = Ctl_VSC1.deltaVmag+E0;
 			Ctl_VSC1.Vac_Ref = Ctl_VSC1.Vmag;
 		}
@@ -92,7 +92,7 @@ void PL_IntrHandler(void)
 			Ctl_VSC1.deltaOmega += (UniA*(Ctl_VSC1.P_Ref - Ctl_VSC1.P_AC_AVG)-UniB*Ctl_VSC1.deltaOmega)/INTFRE;
 			Ctl_VSC1.Omega = (Ctl_VSC1.deltaOmega + Omega0)*50.0f*2.0f*PI;
 			//无功Q-V环控制
-			Ctl_VSC1.deltaVmag += (UniC*(Ctl_VSC1.Q_AC-Ctl_VSC1.Q_Ref)-UniD*Ctl_VSC1.deltaVmag)/INTFRE;
+			Ctl_VSC1.deltaVmag += (UniC*(Ctl_VSC1.Q_Ref - Ctl_VSC1.Q_AC_AVG)-UniD*Ctl_VSC1.deltaVmag)/INTFRE;
 			Ctl_VSC1.Vmag = Ctl_VSC1.deltaVmag+E0;
 			Ctl_VSC1.Vac_Ref = Ctl_VSC1.Vmag;
 		}
