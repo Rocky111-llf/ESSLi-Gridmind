@@ -131,21 +131,22 @@ void AuxCom(u8 Group, float *Dat)
 		Ctl_VSC1.CtlMode = VACCTL;
 		Ctl_VSC1.GFMCtlMode = ComDatF[0];
 		switch(Ctl_VSC1.GFMCtlMode){
-			case VFCTL:
+			case VFCTL:// =0
 				Ctl_VSC1.Vac_Cmd = ComDatF[1];
 				break;
-			case DROOPCTL:
-				Ctl_VSC1.Vac_Cmd = ComDatF[1];
+			case DROOPCTL:// =1
+				// 默认无功环，弃用交流电压下发
+				// Ctl_VSC1.Vac_Cmd = ComDatF[1];
 				Ctl_VSC1.P_Cmd = ComDatF[2];
 				Ctl_VSC1.Q_Cmd = ComDatF[3];
 				break;
 			case VSGCTL:
-				Ctl_VSC1.Vac_Cmd = ComDatF[1];
+				// Ctl_VSC1.Vac_Cmd = ComDatF[1];
 				Ctl_VSC1.P_Cmd = ComDatF[2];
 				Ctl_VSC1.Q_Cmd = ComDatF[3];
 				break;
 			case UniversalGFM:
-				Ctl_VSC1.Vac_Cmd = ComDatF[1];
+				// Ctl_VSC1.Vac_Cmd = ComDatF[1];
 				Ctl_VSC1.P_Cmd = ComDatF[2];
 				Ctl_VSC1.Q_Cmd = ComDatF[3];
 				break;
