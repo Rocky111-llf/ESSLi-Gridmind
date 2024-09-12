@@ -98,15 +98,20 @@
 //20240908添加功率外环参数
 //下垂系数
 
-#define Omega0 (1.0f)
-#define E0 (1.0f)
+#define Omega0 (2*PI*50.0)
+#define E0 ((float)(110.0)*sqrt(2)/sqrt3)
 
-#define Dp_Droop 0.002
-#define Dq_Droop 0.002
+// 虚拟阻抗
+#define Rv 0.0f
+#define Lv 1.5e-3f
+#define Xv (2*PI*50.0*Lv)
 
-//VSG参数,20240814改
-#define Jvsg (5.0f)  		//VSG的惯量
-#define Dpvsg (50.0f) 	//VSG有功阻尼
+#define Dp_Droop 0.0021
+#define Dq_Droop 0.0022
+
+//VSG参数,20240814改,控制结构改成有名值控制，输出的时候标幺化
+#define Jvsg (0.03f)  		//VSG的惯量
+#define Dpvsg (10.0f) 	//VSG有功阻尼
 #define Dqvsg (500.0f)  // VSG无功阻尼
 #define Kqvsg (15.0f)   // VSG无功惯量
 

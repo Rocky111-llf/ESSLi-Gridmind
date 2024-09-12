@@ -213,17 +213,16 @@ void VSCSysCtl(tVSC_CTL* tVSCHandler)
 	{
 		// 构网控制统一电压环
 		// d轴电压跟踪参考值
-		tVSCHandler->Vd_PID.Ref = tVSCHandler->Vac_Ref;
+		// 添加虚拟阻抗环的内环电压参考
+		tVSCHandler->Vd_PID.Ref = tVSCHandler->Vac_Ref-tVSCHandler->IGrid.P2R.d*Rv/NORM_Z+tVSCHandler->IGrid.P2R.q*Xv/NORM_Z;
 		tVSCHandler->Vd_PID.FeedBack = tVSCHandler->UGrid.P2R.d;
 		PIDProc(&tVSCHandler->Vd_PID);
 		tVSCHandler->Id_Ref = tVSCHandler->Vd_PID.Out;
-
 		// q轴电压跟踪0
-		tVSCHandler->Vq_PID.Ref = 0.0f;
+		tVSCHandler->Vq_PID.Ref = 0.0f-tVSCHandler->IGrid.P2R.q*Rv/NORM_Z-tVSCHandler->IGrid.P2R.d*Xv/NORM_Z;
 		tVSCHandler->Vq_PID.FeedBack = tVSCHandler->UGrid.P2R.q;
 		PIDProc(&tVSCHandler->Vq_PID);
 		tVSCHandler->Iq_Ref = tVSCHandler->Vq_PID.Out;
-
 		// 参考信号限幅
 		HardLimit(tVSCHandler->Id_Ref, -1.1f, 1.1f);
 		HardLimit(tVSCHandler->Iq_Ref, -1.1f, 1.1f);
@@ -267,8 +266,8 @@ void VSCControlLoop(tVSC_CTL* tVSCHandler)
 			PIDProc(&tVSCHandler->IqPID);
 			// OutV Calc
 			float VRatio = (NORM_V/(tVSCHandler->DCV_Bus*(RATED_DCV*0.5f*1.154f)));
-			tVSCHandler->UConv.P2R.d = (tVSCHandler->UGrid.P2R.d + tVSCHandler->IdPID.Out - (tVSCHandler->IGrid.P2R.q*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
-			tVSCHandler->UConv.P2R.q = (tVSCHandler->UGrid.P2R.q + tVSCHandler->IqPID.Out + (tVSCHandler->IGrid.P2R.d*tVSCHandler->PLLFre*(2.0f*PI*(Larm/NORM_Z))))*VRatio;
+			tVSCHandler->UConv.P2R.d = (tVSCHandler->UGrid.P2R.d + tVSCHandler->IdPID.Out - (tVSCHandler->IGrid.P2R.q*(50.0*2.0f*PI*Larm/NORM_Z)))*VRatio;
+			tVSCHandler->UConv.P2R.q = (tVSCHandler->UGrid.P2R.q + tVSCHandler->IqPID.Out + (tVSCHandler->IGrid.P2R.d*(50.0*2.0f*PI*Larm/NORM_Z)))*VRatio;
 		}
 		else
 		{

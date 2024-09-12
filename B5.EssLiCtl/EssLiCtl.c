@@ -295,7 +295,7 @@ void LIRunProc(tLI_CTL* tLIHandler)//选择控制模式
 		}else{
 			// 并网状态，默认工作在直流电流控制模式下
 			tLIHandler->Io_PID.Ref = 0.0f;
-			tLIHandler->Io_PID.FeedBack = tLIHandler->Iopu;
+			tLIHandler->Io_PID.FeedBack = -tLIHandler->Iopu;
 			PIDProc(&tLIHandler->Io_PID);
 			tLIHandler->pVSC->Id_Cmd = tLIHandler->Io_PID.Out;
 			tLIHandler->pVSC->Iq_Cmd = 0.0f;

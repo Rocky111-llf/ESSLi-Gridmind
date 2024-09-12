@@ -74,18 +74,20 @@ void PL_IntrHandler(void)
 				Ctl_VSC1.Theta = 0;
 				Ctl_VSC1.GFMCtlMode_Pre = Ctl_VSC1.GFMCtlMode;
 			}
-			// TODO:还未考虑PQ符号问题
-			Ctl_VSC1.Omega =((Ctl_VSC1.P_Ref - Ctl_VSC1.P_AC_AVG)*Dp_Droop+Omega0)*2.0*PI*50.0;
+			// 20240912修改下垂控制
+			Ctl_VSC1.Omega =((Ctl_VSC1.P_Ref - Ctl_VSC1.P_AC_AVG)*Dp_Droop+1.0f)*Omega0;
 			Ctl_VSC1.Theta += Ctl_VSC1.Omega/INTFRE; // 累加得到相角,INTFRE为中断频率
-			Ctl_VSC1.Vmag = ((Ctl_VSC1.Q_Ref - Ctl_VSC1.Q_AC_AVG)*Dq_Droop+E0);
+			Ctl_VSC1.Vmag  =((Ctl_VSC1.Q_Ref - Ctl_VSC1.Q_AC_AVG)*Dq_Droop+1.0f);//添加无功积分环节
+			// Ctl_VSC1.deltaVmag +=(-Ctl_VSC1.Q_Ref + Ctl_VSC1.Q_AC_AVG)*Dq_Droop/INTFRE;//添加无功积分环节
+			// Ctl_VSC1.Vmag = (Ctl_VSC1.deltaVmag+1.0f);
 			Ctl_VSC1.Vac_Ref = Ctl_VSC1.Vmag;
 		}else if(Ctl_VSC1.GFMCtlMode == VSGCTL){
-			//TODO VSG控制
-			Ctl_VSC1.deltaOmega += ((Ctl_VSC1.P_Ref - Ctl_VSC1.P_AC_AVG)-Dpvsg*Ctl_VSC1.deltaOmega)/Jvsg/INTFRE;
+			// 20240912修改VSG控制
+			Ctl_VSC1.deltaOmega += ((Ctl_VSC1.P_Ref - Ctl_VSC1.P_AC_AVG)*NORM_S/Omega0-Dpvsg*Ctl_VSC1.deltaOmega)/Jvsg/INTFRE;
 			Ctl_VSC1.Omega = (Ctl_VSC1.deltaOmega + 1.0)*2.0*PI*50.0;
 			Ctl_VSC1.Theta += Ctl_VSC1.Omega/INTFRE; // 累加得到相角,INTFRE为中断频率
-			Ctl_VSC1.deltaVmag += ((Ctl_VSC1.Q_Ref - Ctl_VSC1.Q_AC_AVG)-Dqvsg*Ctl_VSC1.deltaOmega)/Kqvsg/INTFRE;
-			Ctl_VSC1.Vmag = Ctl_VSC1.deltaVmag+E0;
+			Ctl_VSC1.deltaVmag += ((Ctl_VSC1.Q_Ref - Ctl_VSC1.Q_AC_AVG)*NORM_S-Dqvsg*Ctl_VSC1.deltaOmega)/Kqvsg/INTFRE;
+			Ctl_VSC1.Vmag = (Ctl_VSC1.deltaVmag+E0)/NORM_V;
 			Ctl_VSC1.Vac_Ref = Ctl_VSC1.Vmag;
 		}
 		else{
