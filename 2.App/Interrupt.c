@@ -74,21 +74,23 @@ void PL_IntrHandler(void)
 				Ctl_VSC1.Theta = 0;
 				Ctl_VSC1.GFMCtlMode_Pre = Ctl_VSC1.GFMCtlMode;
 			}
+			debug1=10;
 			// 20240912修改下垂控制
-			Ctl_VSC1.Omega =((Ctl_VSC1.P_Ref - Ctl_VSC1.P_AC_AVG)*Dp_Droop+1.0f)*Omega0;
+		    Ctl_VSC1.Omega =((Ctl_VSC1.P_Ref - Ctl_VSC1.P_AC_AVG)*Dp_Droop+1.0f)*Omega0;
 			Ctl_VSC1.Theta += Ctl_VSC1.Omega/INTFRE; // 累加得到相角,INTFRE为中断频率
-			Ctl_VSC1.Vmag  =((Ctl_VSC1.Q_Ref - Ctl_VSC1.Q_AC_AVG)*Dq_Droop+1.0f);//添加无功积分环节
-			// Ctl_VSC1.deltaVmag +=(-Ctl_VSC1.Q_Ref + Ctl_VSC1.Q_AC_AVG)*Dq_Droop/INTFRE;//添加无功积分环节
-			// Ctl_VSC1.Vmag = (Ctl_VSC1.deltaVmag+1.0f);
-			Ctl_VSC1.Vac_Ref = Ctl_VSC1.Vmag;
+			// Ctl_VSC1.Vmag  =((Ctl_VSC1.Q_Ref - Ctl_VSC1.Q_AC_AVG)*Dq_Droop+1.0f);//添加无功积分环节
+			Ctl_VSC1.deltaVmag +=(Ctl_VSC1.Q_Ref - Ctl_VSC1.Q_AC_AVG)*Dq_Droop/INTFRE;//添加无功积分环节
+			Ctl_VSC1.Vmag = (Ctl_VSC1.deltaVmag+1.0f);
+			Ctl_VSC1.Vac_Cmd = Ctl_VSC1.Vmag;
 		}else if(Ctl_VSC1.GFMCtlMode == VSGCTL){
 			// 20240912修改VSG控制
+			debug2=20;
 			Ctl_VSC1.deltaOmega += ((Ctl_VSC1.P_Ref - Ctl_VSC1.P_AC_AVG)*NORM_S/Omega0-Dpvsg*Ctl_VSC1.deltaOmega)/Jvsg/INTFRE;
 			Ctl_VSC1.Omega = (Ctl_VSC1.deltaOmega + 1.0)*2.0*PI*50.0;
 			Ctl_VSC1.Theta += Ctl_VSC1.Omega/INTFRE; // 累加得到相角,INTFRE为中断频率
 			Ctl_VSC1.deltaVmag += ((Ctl_VSC1.Q_Ref - Ctl_VSC1.Q_AC_AVG)*NORM_S-Dqvsg*Ctl_VSC1.deltaOmega)/Kqvsg/INTFRE;
 			Ctl_VSC1.Vmag = (Ctl_VSC1.deltaVmag+E0)/NORM_V;
-			Ctl_VSC1.Vac_Ref = Ctl_VSC1.Vmag;
+			Ctl_VSC1.Vac_Cmd = Ctl_VSC1.Vmag;
 		}
 		else{
 			//TODO 统一构网控制
@@ -138,10 +140,11 @@ void PL_IntrHandler(void)
 	// SetDAC((Ctl_VSC1.P_Ref),10.0f,sAo0,0);
 	// SetDAC((Ctl_VSC1.P_AC_AVG),10.0f,sAo0,1);
 	// SetDAC((fabs(Ctl_VSC1.P_PID.Err)),10.0f,sAo0,2);
-	// SetDAC((Ctl_VSC1.Theta),1.0,sAo0,3);
-	SetDAC((Ctl_VSC1.IGrid.P3S.a),10.0f,sAo0,0);
-	SetDAC((Ctl_VSC1.IGrid.P3S.b),10.0f,sAo0,1);
-	SetDAC((Ctl_VSC1.IGrid.P3S.c),10.0f,sAo0,2);
+    SetDAC((Ctl_VSC1.Theta),10.0f,sAo0,3);
+	SetDAC((Ctl_VSC1.Vac_Ref),10.0f,sAo0,0);
+	// SetDAC((Ctl_VSC1.IGrid.P3S.a),10.0f,sAo0,0);
+	SetDAC((Ctl_VSC1.UGrid.P3S.a),10.0f,sAo0,1);
+	SetDAC((Ctl_VSC1.IGrid.P3S.a),10.0f,sAo0,2);
 	// SetDAC((Ctl_VSC1.IGrid.P3S.a),1.2f,sAo0,0);//并网电流
 	// SetDAC((Ctl_VSC1.UGrid.P3S.a),1.2f,sAo0,1);//并网电压
 }

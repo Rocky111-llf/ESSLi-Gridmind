@@ -106,7 +106,7 @@ typedef struct
 	float P_AC_AVG,Q_AC_AVG,P_DC_AVG,S_AC_AVG;
 	float P_AC,Q_AC,P_DC;
 	RMSInfo_t RMSInfo;
-	float P_Cmd,Q_Cmd,Vdc_Cmd,Id_Cmd,Iq_Cmd,Vac_Cmd,Fre_Cmd;		//接收到的指令，到内部参考还需要使用Slope
+	float P_Cmd,Q_Cmd,Vdc_Cmd,Id_Cmd,Iq_Cmd,Vac_Cmd,Fre_Cmd;		//接收到的指令，到内部参考还需要使用Slop
 	PARA3S2S2R I2arm,Uccsc;
 	S_IARM sIarm;
 	s16 *ADC_Va,*ADC_Vb,*ADC_Vc,*ADC_Ia,*ADC_Ib,*ADC_Ic,*ADC_Vdc,*ADC_Idc;

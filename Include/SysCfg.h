@@ -103,14 +103,14 @@
 
 // 虚拟阻抗
 #define Rv 0.0f
-#define Lv 1.5e-3f
+#define Lv 100.0e-3f
 #define Xv (2*PI*50.0*Lv)
 
-#define Dp_Droop 0.0021
-#define Dq_Droop 0.0022
+#define Dp_Droop 0.2f
+#define Dq_Droop 0.05f
 
 //VSG参数,20240814改,控制结构改成有名值控制，输出的时候标幺化
-#define Jvsg (0.03f)  		//VSG的惯量
+#define Jvsg (0.5f)  		//VSG的惯量
 #define Dpvsg (10.0f) 	//VSG有功阻尼
 #define Dqvsg (500.0f)  // VSG无功阻尼
 #define Kqvsg (15.0f)   // VSG无功惯量

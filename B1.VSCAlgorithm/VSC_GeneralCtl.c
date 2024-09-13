@@ -497,15 +497,13 @@ void VSCCmd_Slope(tVSC_CTL* tVSCHandler)
 			tVSCHandler->Q_Ref -= PQStep;
 		else
 			tVSCHandler->Q_Ref = tVSCHandler->Q_Cmd;
-		if(tVSCHandler->GFMCtlMode == VFCTL){
 //½»Á÷µçÑ¹ÅÀÆÂ
-			if((tVSCHandler->Vac_Ref+VacStep) < tVSCHandler->Vac_Cmd)
-				tVSCHandler->Vac_Ref += VacStep;
-			else if((tVSCHandler->Vac_Ref-VacStep) > tVSCHandler->Vac_Cmd)
-				tVSCHandler->Vac_Ref -= VacStep;
-			else
-				tVSCHandler->Vac_Ref = tVSCHandler->Vac_Cmd;
-		}
+		if((tVSCHandler->Vac_Ref+VacStep) < tVSCHandler->Vac_Cmd)
+			tVSCHandler->Vac_Ref += VacStep;
+		else if((tVSCHandler->Vac_Ref-VacStep) > tVSCHandler->Vac_Cmd)
+			tVSCHandler->Vac_Ref -= VacStep;
+		else
+			tVSCHandler->Vac_Ref = tVSCHandler->Vac_Cmd;
 	}
 }
 
