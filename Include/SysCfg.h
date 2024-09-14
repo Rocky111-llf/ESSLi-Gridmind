@@ -96,18 +96,18 @@
 #define DCPRECH_VOL_MIN				(0.9f)				//0.9倍输入直流电压
 
 //20240908添加功率外环参数
-//下垂系数
 
 #define Omega0 (2*PI*50.0)
 #define E0 ((float)(110.0)*sqrt(2)/sqrt3)
 
 // 虚拟阻抗
-#define Rv 0.0f
-#define Lv 100.0e-3f
+#define Rv 0.02f
+#define Lv 12e-3f
 #define Xv (2*PI*50.0*Lv)
 
-#define Dp_Droop 0.2f
-#define Dq_Droop 0.05f
+//下垂系数
+#define Dp_Droop 0.05f
+#define Dq_Droop 0.002f
 
 //VSG参数,20240814改,控制结构改成有名值控制，输出的时候标幺化
 #define Jvsg (0.5f)  		//VSG的惯量

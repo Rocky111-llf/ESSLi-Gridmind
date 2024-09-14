@@ -121,8 +121,8 @@ const PID VarDef(THETA_PID_INIT,DevID) = {0,0,0,0, //Ref,Feedback,Err,ErrPre
 		0.38,//Tf
 		0};//UF;j
 const PID VarDef(PQ_PID_INIT,DevID) = {0,0,0,0, //Ref,Feedback,Err,ErrPre
-		0.001, //Kp
-		0.15,//Ki
+		0.0015, //Kp
+		0.2,//Ki
 		0,//Kd
 		0,//I
 		0,//Out
