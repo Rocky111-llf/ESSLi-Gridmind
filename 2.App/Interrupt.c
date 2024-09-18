@@ -79,7 +79,7 @@ void PL_IntrHandler(void)
 			Ctl_VSC1.Theta += Ctl_VSC1.Omega/INTFRE; // 累加得到相角,INTFRE为中断频率
 			// Ctl_VSC1.Vmag  =((Ctl_VSC1.Q_Ref - Ctl_VSC1.Q_AC_AVG)*Dq_Droop+1.0f);//添加无功积分环节
 
-			Ctl_VSC1.deltaVmag +=(-Ctl_VSC1.Q_Ref + Ctl_VSC1.Q_AC_AVG)*Dq_Droop/INTFRE;//添加无功积分环节
+			Ctl_VSC1.deltaVmag +=(Ctl_VSC1.Q_Ref - Ctl_VSC1.Q_AC_AVG)*Dq_Droop/INTFRE;//添加无功积分环节
 			Ctl_VSC1.Vmag = Ctl_VSC1.deltaVmag+1.0f;
 
 			// 无功PI控制

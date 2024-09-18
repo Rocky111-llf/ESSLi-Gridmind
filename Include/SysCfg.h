@@ -102,7 +102,7 @@
 
 // 虚拟阻抗
 #define Rv 0.02f
-#define Lv 12e-3f
+#define Lv 15e-3f
 #define Xv (2*PI*50.0*Lv)
 
 //下垂系数
@@ -110,10 +110,10 @@
 #define Dq_Droop 0.002f
 
 //VSG参数,20240814改,控制结构改成有名值控制，输出的时候标幺化
-#define Jvsg (0.5f)  		//VSG的惯量
-#define Dpvsg (10.0f) 	//VSG有功阻尼
-#define Dqvsg (500.0f)  // VSG无功阻尼
-#define Kqvsg (15.0f)   // VSG无功惯量
+#define Jvsg (5.0f)  		//VSG的惯量
+#define Dpvsg (90.0f) 	//VSG有功阻尼
+#define Dqvsg (90.0f)  // VSG无功阻尼
+#define Kqvsg (10.0f)   // VSG无功惯量
 
 //LPF Droop参数,20240814改
 #define Dp_LPF (1.0f/Omega0/Dqvsg) //20240814添加
