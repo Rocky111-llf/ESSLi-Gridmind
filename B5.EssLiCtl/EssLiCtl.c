@@ -295,9 +295,9 @@ void LIRunProc(tLI_CTL* tLIHandler)//选择控制模式
 		}else{
 			// 并网状态，默认工作在直流电流控制模式下
 			tLIHandler->Io_PID.Ref = 0.0f;
-			tLIHandler->Io_PID.FeedBack = -tLIHandler->Iopu;
+			tLIHandler->Io_PID.FeedBack = tLIHandler->Iopu;
 			PIDProc(&tLIHandler->Io_PID);
-			tLIHandler->pVSC->Id_Cmd = tLIHandler->Io_PID.Out;
+			tLIHandler->pVSC->Id_Cmd = -tLIHandler->Io_PID.Out;
 			tLIHandler->pVSC->Iq_Cmd = 0.0f;
 			tLIHandler->ChgSts = CHG_IDLE_LI;
 			tLIHandler->pVSC->CtlMode = IDQCTL;
@@ -326,7 +326,7 @@ void LIRunProc(tLI_CTL* tLIHandler)//选择控制模式
 			tLIHandler->Io_PID.Ref = tLIHandler->ChgI_TCpu;		//涓流电流
 			tLIHandler->Io_PID.FeedBack = tLIHandler->Iopu;
 			PIDProc(&tLIHandler->Io_PID);
-			tLIHandler->pVSC->Id_Cmd = tLIHandler->Io_PID.Out;
+			tLIHandler->pVSC->Id_Cmd = -tLIHandler->Io_PID.Out;
 			if(tLIHandler->Vopu >= tLIHandler->ChgV_TC2CCpu)
 				tLIHandler->ChgSts = CHG_CC_LI;
 			break;
@@ -338,7 +338,7 @@ void LIRunProc(tLI_CTL* tLIHandler)//选择控制模式
 				tLIHandler->Io_PID.Ref = tLIHandler->ChgI_CCpu;
 			tLIHandler->Io_PID.FeedBack = tLIHandler->Iopu;
 			PIDProc(&tLIHandler->Io_PID);
-			tLIHandler->pVSC->Id_Cmd = tLIHandler->Io_PID.Out;
+			tLIHandler->pVSC->Id_Cmd = -tLIHandler->Io_PID.Out;
 			if(tLIHandler->Vopu >= tLIHandler->ChgV_CVpu)
 			{
 				tLIHandler->ChgSts = CHG_CV_LI;
@@ -350,7 +350,7 @@ void LIRunProc(tLI_CTL* tLIHandler)//选择控制模式
 			tLIHandler->Vo_PID.Ref = tLIHandler->ChgV_CVpu;
 			tLIHandler->Vo_PID.FeedBack = tLIHandler->Vopu;
 			PIDProc(&tLIHandler->Vo_PID);
-			tLIHandler->pVSC->Id_Cmd = tLIHandler->Vo_PID.Out;
+			tLIHandler->pVSC->Id_Cmd = -tLIHandler->Vo_PID.Out;
 			if(tLIHandler->Iopu < tLIHandler->ChgI_CV2OKpu)
 			{
 				tLIHandler->ChgSts = CHG_OK_LI;
@@ -478,7 +478,7 @@ void LILocalParasUpdate(tLI_CTL* tLIHandler)		//本地数据更新
 
 	tLIHandler->ErrStatus = tLIHandler->gSysErrReg;
 	tLIHandler->Vo = tLIHandler->pVSC->Vdc;
-	tLIHandler->Io = tLIHandler->pVSC->Idc;
+	tLIHandler->Io = tLIHandler->pVSC->Idc; 
 	tLIHandler->Vopu = tLIHandler->Vo*tLIHandler->Vb_Reci;
 	tLIHandler->Iopu = tLIHandler->Io*tLIHandler->Ib_Reci;
 	if(tLIHandler->BMS_ComOK)

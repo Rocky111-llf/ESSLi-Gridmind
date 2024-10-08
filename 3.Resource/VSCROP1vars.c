@@ -30,7 +30,7 @@
 #define OPT_N		0					//光纤板N相通道
 #endif
 
-#define PQ_SLOP_STEP 		(0.0001f)	//功率爬坡
+#define PQ_SLOP_STEP 		(0.01f)	//功率爬坡
 #define VDC_SLOP_STEP		(0.001f)	//直流电压爬坡 pu/ms
 #define VAC_SLOP_STEP		(0.001f)	//交流电压爬坡 pu/ms
 
@@ -121,8 +121,8 @@ const PID VarDef(THETA_PID_INIT,DevID) = {0,0,0,0, //Ref,Feedback,Err,ErrPre
 		0.38,//Tf
 		0};//UF;j
 const PID VarDef(PQ_PID_INIT,DevID) = {0,0,0,0, //Ref,Feedback,Err,ErrPre
-		0.0015, //Kp
-		0.2,//Ki
+		0.3, //Kp
+		0.5,//Ki
 		0,//Kd
 		0,//I
 		0,//Out
@@ -150,10 +150,9 @@ const PID VarDef(VBUS_PID_INIT,DevID) = {0,0,0,0, //Ref,Feedback,Err,ErrPre
 		-1.2,//OutMin
 		10,//Tf		5
 		0};//UF;
-
 const PID VarDef(VC_PID_INIT,DevID) = {0,0,0,0, //Ref,Feedback,Err,ErrPre
-		0.0008, //Kp  0.8
-		0.5,//Ki
+		0.0002, //Kp  0.8
+		0.2,//Ki
 		0,//Kd
 		0,//I
 		0,//Out

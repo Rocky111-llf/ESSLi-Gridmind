@@ -81,7 +81,7 @@ typedef struct
 //系统控制内部运行变量
 	PARA3S2S2R UGrid,UConv,IGrid;					//电网电压
 	PARA3S2S2R Iconv,Ucap;
-	float Omega,deltaOmega,Vmag,deltaVmag,Theta,PLLFre;
+	float Omega,deltaOmega,Vmag,Ugmag,deltaVmag,Theta,PLLFre;
 	SINCOS_t Theta_GridSincos;
 	float ThetaPhase;
 	SINCOS_t ThetaPhase_GridSincos;

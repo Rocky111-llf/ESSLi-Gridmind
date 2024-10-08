@@ -52,6 +52,7 @@ void VSCParasInit(tVSC_CTL* tVSCHandler)
 	tVSCHandler->deltaVmag = 0.0f;
 	tVSCHandler->Omega = 0.0f;
 	tVSCHandler->Vmag = 0.0f;
+	tVSCHandler->Ugmag = 0.0f;
 	tVSCHandler->Theta = 0.0f;
 //PID Init
 	tVSCHandler->ThetaPID = tVSCHandler->THETA_PID_INIT;

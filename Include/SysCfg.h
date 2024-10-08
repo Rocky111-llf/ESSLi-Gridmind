@@ -30,9 +30,9 @@
 #define CAR_SYNC_PRD		(1)					//=N*(INTFRE/H_FRE),N为保证N*(INTFRE/H_FRE)为整数的最小值
 
 /*额定参数表*/
-#define RATED_S             (3.0e3)
+#define RATED_S       (3.0e3)
 #define RATED_ACV			(110.0f) // 额定线电压改为110V
-#define RATED_ACI           ((float)(RATED_S/RATED_ACV/sqrt3))
+#define RATED_ACI     ((float)(RATED_S/RATED_ACV/sqrt3))
 #define RATED_DCV			(200.0f)
 #define RATED_DCI			((float)(RATED_S/RATED_DCV))
 
@@ -100,18 +100,14 @@
 #define Omega0 (2*PI*50.0)
 #define E0 ((float)(110.0)*sqrt(2)/sqrt3)
 
-// 虚拟阻抗
-#define Rv 0.02f
-#define Lv 15e-3f
-#define Xv (2*PI*50.0*Lv)
-
 //下垂系数
-#define Dp_Droop 0.05f
-#define Dq_Droop 0.002f
+#define Dp_Droop 0.1f
+#define Dq_Droop 0.06f
+#define KV_Droop 20.0f
 
 //VSG参数,20240814改,控制结构改成有名值控制，输出的时候标幺化
-#define Jvsg (5.0f)  		//VSG的惯量
-#define Dpvsg (90.0f) 	//VSG有功阻尼
+#define Jvsg (0.001f)  		//VSG的惯量
+#define Dpvsg (20.0f) 	//VSG有功阻尼
 #define Dqvsg (90.0f)  // VSG无功阻尼
 #define Kqvsg (10.0f)   // VSG无功惯量
 
@@ -189,9 +185,21 @@
 #define NORM_I	((float)(RATED_ACI)*sqrt2)				//AC电流标幺基准
 #define NORM_I_ARM	((NORM_I/2.0f)+(RATED_DCI/3.0f))
 #define NORM_S	(RATED_S)
-#define NORM_Z	((float)(RATED_ACV*RATED_ACV/RATED_S))
+#define NORM_Z	((float)(RATED_ACV*RATED_ACV/RATED_S))//4.0333
 #define H_FRE_REG			((u16)(HB_CLK/H_FRE/4))
 
+// 虚拟阻抗
+#define SCR 5
+#define Zg NORM_Z/SCR
+#define Kxr 20
+#define Rg FastSqrt(Zg*Zg/(Kxr*Kxr+1))
+#define Lg FastSqrt(Kxr*Kxr*Zg*Zg/(Kxr*Kxr+1))/Omega0
+#define Rv Rg
+#define Lv Lg
+#define Xv (2*PI*50.0*Lv)
+
+#define AVG100ms_10kHz	(INTFRE/10.0f)				//1阶低通滤波参数@10kHz运行频率
+#define AVG50ms_10kHz		(INTFRE/20.0f)				//1阶低通滤波参数@10kHz运行频率
 #define AVG20ms_10kHz		(INTFRE/50.0f)				//1阶低通滤波参数@10kHz运行频率
 #define AVG10ms_10kHz		(INTFRE/100.0f)
 #define AVG5ms_10kHz		(INTFRE/200.0f)
